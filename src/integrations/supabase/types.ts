@@ -132,7 +132,7 @@ export type Database = {
           parent_id: string | null
           sort_order: number
           start_date: string | null
-          status: Database["public"]["Enums"]["task_status"]
+          status: string
           title: string
         }
         Insert: {
@@ -145,7 +145,7 @@ export type Database = {
           parent_id?: string | null
           sort_order?: number
           start_date?: string | null
-          status?: Database["public"]["Enums"]["task_status"]
+          status?: string
           title?: string
         }
         Update: {
@@ -158,7 +158,7 @@ export type Database = {
           parent_id?: string | null
           sort_order?: number
           start_date?: string | null
-          status?: Database["public"]["Enums"]["task_status"]
+          status?: string
           title?: string
         }
         Relationships: [
@@ -187,13 +187,6 @@ export type Database = {
     }
     Enums: {
       attachment_kind: "document" | "email" | "link"
-      task_status:
-        | "open"
-        | "in_progress"
-        | "waiting"
-        | "done"
-        | "blocked"
-        | "question"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -322,14 +315,6 @@ export const Constants = {
   public: {
     Enums: {
       attachment_kind: ["document", "email", "link"],
-      task_status: [
-        "open",
-        "in_progress",
-        "waiting",
-        "done",
-        "blocked",
-        "question",
-      ],
     },
   },
 } as const
