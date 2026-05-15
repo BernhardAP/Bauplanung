@@ -22,6 +22,7 @@ interface Props {
   onCycleStatus: () => void;
   onIndent: () => void;
   onOutdent: () => void;
+  onAddSubtask: () => void;
 }
 
 function fmtDate(s: string | null) {
