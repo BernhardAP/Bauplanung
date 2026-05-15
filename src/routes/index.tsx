@@ -378,6 +378,22 @@ function TasksPage() {
         open={!!editTaskId}
         onOpenChange={(o) => { if (!o) setEditTaskId(null); }}
       />
+
+      {dragState && draggedTask && (
+        <div
+          className="pointer-events-none fixed z-50 px-3 py-2 rounded-md border bg-card shadow-lg text-sm max-w-[80vw] truncate"
+          style={{
+            left: dragState.x,
+            top: dragState.y,
+            transform: 'translate(-50%, -120%)',
+          }}
+        >
+          {draggedTask.title || '(ohne Titel)'}
+          {dragState.targetId && (
+            <span className="ml-2 text-xs text-primary">→ Unteraufgabe</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
