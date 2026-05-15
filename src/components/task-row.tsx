@@ -85,11 +85,16 @@ export function TaskRow({
               </span>
               {company && <CompanyBadge company={company} />}
               {dateText && <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">{fmtDate(task.end_date ?? task.start_date)}</span>}
-              {hasChildren ? (
+              {hasChildren && (
                 <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${childrenCollapsed ? '' : 'rotate-90'}`} />
-              ) : (
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} />
               )}
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
+              className="p-1.5 -m-1 shrink-0 text-muted-foreground"
+              aria-label="Details"
+            >
+              <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
             </button>
           </div>
 
