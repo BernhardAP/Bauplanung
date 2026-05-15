@@ -101,8 +101,9 @@ function TimelinePage() {
     return { start, end };
   }, [dated, today]);
 
+  const [zoom, setZoom] = useState<'day' | 'week' | 'month'>('day');
+  const dayWidth = zoom === 'day' ? 32 : zoom === 'week' ? 12 : 5; // px per day
   const totalDays = diffDays(range.end, range.start) + 1;
-  const dayWidth = 32; // px
   const labelWidth = 200; // sticky left column
   const gridWidth = totalDays * dayWidth;
 
@@ -112,7 +113,7 @@ function TimelinePage() {
     if (!scrollerRef.current) return;
     const todayOffset = diffDays(today, range.start) * dayWidth;
     scrollerRef.current.scrollLeft = Math.max(0, todayOffset - 80);
-  }, [range.start.getTime()]);
+  }, [range.start.getTime(), dayWidth]);
 
   function scrollBy(days: number) {
     scrollerRef.current?.scrollBy({ left: days * dayWidth, behavior: 'smooth' });
