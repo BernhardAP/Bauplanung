@@ -430,7 +430,7 @@ function TasksPage() {
               onToggleExpand={() => toggleExpand(t.id)}
               onToggleChildren={() => toggleChildren(t.id)}
               onEdit={() => setEditTaskId(t.id)}
-              onCycleStatus={() => applyUpdate(t.id, { status: nextStatus(t.status) }, `Status: „${t.title || 'Aufgabe'}"`)}
+              onCycleStatus={() => applyUpdate(t.id, { status: nextStatus(t.status, statusMeta.order) }, `Status: „${t.title || 'Aufgabe'}"`)}
               onIndent={() => handleIndent(t)}
               onOutdent={() => handleOutdent(t)}
               onAddSubtask={() => handleAddSubtask(t)}
