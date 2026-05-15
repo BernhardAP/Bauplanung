@@ -37,6 +37,7 @@ function TasksPage() {
 
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [collapsedParents, setCollapsedParents] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<Set<TaskStatus>>(new Set());
   const [companyFilter, setCompanyFilter] = useState<Set<string>>(new Set());
@@ -48,18 +49,39 @@ function TasksPage() {
     for (const a of attachments) m.set(a.task_id, (m.get(a.task_id) ?? 0) + 1);
     return m;
   }, [attachments]);
+  const childrenByParent = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const t of tasks) if (t.parent_id) m.set(t.parent_id, (m.get(t.parent_id) ?? 0) + 1);
+    return m;
+  }, [tasks]);
+
+  const filterActive = statusFilter.size + companyFilter.size > 0 || search.trim().length > 0;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return ordered.filter((t) => {
+    // First apply filters
+    const matchesFilters = (t: Task) => {
       if (statusFilter.size > 0 && !statusFilter.has(t.status)) return false;
       if (companyFilter.size > 0) {
         if (!t.company_id || !companyFilter.has(t.company_id)) return false;
       }
       if (q && !(t.title.toLowerCase().includes(q) || (t.notes ?? '').toLowerCase().includes(q))) return false;
       return true;
-    });
-  }, [ordered, search, statusFilter, companyFilter]);
+    };
+    // Hide descendants of any collapsed parent (only when no filter is active,
+    // so search/filters always show all matches regardless of collapse state).
+    const hideByCollapse = (t: Task): boolean => {
+      if (filterActive) return false;
+      let p = t.parent_id;
+      while (p) {
+        if (collapsedParents.has(p)) return true;
+        const parent = tasks.find((x) => x.id === p);
+        p = parent?.parent_id ?? null;
+      }
+      return false;
+    };
+    return ordered.filter((t) => matchesFilters(t) && !hideByCollapse(t));
+  }, [ordered, tasks, search, statusFilter, companyFilter, collapsedParents, filterActive]);
 
   const editTask = ordered.find((t) => t.id === editTaskId) ?? null;
   const filterActive = statusFilter.size + companyFilter.size > 0 || search.trim().length > 0;
