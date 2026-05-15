@@ -100,6 +100,27 @@ export type Database = {
         }
         Relationships: []
       }
+      status_settings: {
+        Row: {
+          color: string | null
+          label: string
+          sort_order: number
+          status: string
+        }
+        Insert: {
+          color?: string | null
+          label: string
+          sort_order?: number
+          status: string
+        }
+        Update: {
+          color?: string | null
+          label?: string
+          sort_order?: number
+          status?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           company_id: string | null
