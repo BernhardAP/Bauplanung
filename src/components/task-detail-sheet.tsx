@@ -265,15 +265,26 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
                 <li className="text-xs text-muted-foreground">Noch keine Dokumente verknüpft.</li>
               )}
             </ul>
-            <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => setPickerOpen(true)}>
-              <Link2 className="h-4 w-4 mr-1" /> OneDrive-Datei verknüpfen
-            </Button>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
+                <Link2 className="h-4 w-4 mr-1" /> OneDrive-Datei verknüpfen
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => setOutlookOpen(true)}>
+                <Inbox className="h-4 w-4 mr-1" /> E-Mail aus Outlook anhängen
+              </Button>
+            </div>
           </div>
 
           <OnedrivePicker
             open={pickerOpen}
             onOpenChange={setPickerOpen}
             onPick={(item) => addLink.mutateAsync({ name: item.name, webUrl: item.webUrl, mimeType: item.mimeType })}
+          />
+
+          <OutlookPicker
+            open={outlookOpen}
+            onOpenChange={setOutlookOpen}
+            onSaved={(item) => addLink.mutateAsync({ name: item.name, webUrl: item.webUrl, mimeType: item.mimeType, kind: 'email' })}
           />
 
           {company && (
