@@ -1,5 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router';
-import { ListChecks, Building2, Database, CalendarRange } from 'lucide-react';
+import { ListChecks, Building2, Settings, CalendarRange } from 'lucide-react';
 
 export function BottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -7,7 +7,7 @@ export function BottomNav() {
     { to: '/', label: 'Aufgaben', icon: ListChecks, match: (p: string) => p === '/' },
     { to: '/timeline', label: 'Zeitplan', icon: CalendarRange, match: (p: string) => p.startsWith('/timeline') },
     { to: '/companies', label: 'Unternehmen', icon: Building2, match: (p: string) => p.startsWith('/companies') },
-    { to: '/backup', label: 'Backup', icon: Database, match: (p: string) => p.startsWith('/backup') },
+    { to: '/settings', label: 'Einstellungen', icon: Settings, match: (p: string) => p.startsWith('/settings') || p.startsWith('/backup') },
   ] as const;
 
   return (
