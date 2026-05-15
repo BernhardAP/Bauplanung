@@ -29,6 +29,7 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
   const [draft, setDraft] = useState<Task | null>(null);
   const [extraCc, setExtraCc] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [outlookOpen, setOutlookOpen] = useState(false);
 
   useEffect(() => { setDraft(task); setExtraCc([]); }, [task?.id, open]);
 
