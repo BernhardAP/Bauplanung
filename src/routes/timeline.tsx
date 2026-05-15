@@ -254,24 +254,51 @@ function TimelinePage() {
                 </div>
               ))}
             </div>
-            {/* days row */}
-            <div className="flex" style={{ paddingLeft: labelWidth }}>
-              {Array.from({ length: totalDays }).map((_, i) => {
-                const d = addDays(range.start, i);
-                const isToday = diffDays(d, today) === 0;
-                const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                return (
-                  <div
-                    key={i}
-                    style={{ width: dayWidth }}
-                    className={`text-center text-[10px] leading-tight py-1 border-r ${isWeekend ? 'bg-muted/40' : ''} ${isToday ? 'bg-primary/15 font-semibold' : 'text-muted-foreground'}`}
-                  >
-                    <div>{WD[(d.getDay() + 6) % 7]}</div>
-                    <div className="tabular-nums">{fmtDay(d)}</div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* secondary row: day cells, week numbers, or hidden in month view */}
+            {zoom === 'day' && (
+              <div className="flex" style={{ paddingLeft: labelWidth }}>
+                {Array.from({ length: totalDays }).map((_, i) => {
+                  const d = addDays(range.start, i);
+                  const isToday = diffDays(d, today) === 0;
+                  const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                  return (
+                    <div
+                      key={i}
+                      style={{ width: dayWidth }}
+                      className={`text-center text-[10px] leading-tight py-1 border-r ${isWeekend ? 'bg-muted/40' : ''} ${isToday ? 'bg-primary/15 font-semibold' : 'text-muted-foreground'}`}
+                    >
+                      <div>{WD[(d.getDay() + 6) % 7]}</div>
+                      <div className="tabular-nums">{fmtDay(d)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {zoom === 'week' && (
+              <div className="flex" style={{ paddingLeft: labelWidth }}>
+                {(() => {
+                  const cells: JSX.Element[] = [];
+                  let i = 0;
+                  while (i < totalDays) {
+                    const d = addDays(range.start, i);
+                    const dow = (d.getDay() + 6) % 7;
+                    const span = Math.min(7 - dow, totalDays - i);
+                    const todayHere = diffDays(today, d) >= 0 && diffDays(today, d) < span;
+                    cells.push(
+                      <div
+                        key={i}
+                        style={{ width: span * dayWidth }}
+                        className={`text-center text-[10px] leading-tight py-1 border-r truncate ${todayHere ? 'bg-primary/15 font-semibold' : 'text-muted-foreground'}`}
+                      >
+                        KW {isoWeek(d)}
+                      </div>,
+                    );
+                    i += span;
+                  }
+                  return cells;
+                })()}
+              </div>
+            )}
           </div>
 
           {/* Today vertical line */}
