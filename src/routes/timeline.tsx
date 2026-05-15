@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCompanies, fetchTasks } from '@/lib/queries';
 import { TaskDetailSheet } from '@/components/task-detail-sheet';
@@ -36,6 +36,13 @@ function startOfWeek(d: Date) {
 function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 function diffDays(a: Date, b: Date) { return Math.round((startOfDay(a).getTime() - startOfDay(b).getTime()) / MS_PER_DAY); }
 function fmtDay(d: Date) { return String(d.getDate()).padStart(2, '0'); }
+function isoWeek(d: Date) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t.getTime() - yearStart.getTime()) / MS_PER_DAY + 1) / 7);
+}
 const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 const WD = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
@@ -101,8 +108,9 @@ function TimelinePage() {
     return { start, end };
   }, [dated, today]);
 
+  const [zoom, setZoom] = useState<'day' | 'week' | 'month'>('day');
+  const dayWidth = zoom === 'day' ? 32 : zoom === 'week' ? 12 : 5; // px per day
   const totalDays = diffDays(range.end, range.start) + 1;
-  const dayWidth = 32; // px
   const labelWidth = 200; // sticky left column
   const gridWidth = totalDays * dayWidth;
 
@@ -112,7 +120,7 @@ function TimelinePage() {
     if (!scrollerRef.current) return;
     const todayOffset = diffDays(today, range.start) * dayWidth;
     scrollerRef.current.scrollLeft = Math.max(0, todayOffset - 80);
-  }, [range.start.getTime()]);
+  }, [range.start.getTime(), dayWidth]);
 
   function scrollBy(days: number) {
     scrollerRef.current?.scrollBy({ left: days * dayWidth, behavior: 'smooth' });
@@ -146,8 +154,19 @@ function TimelinePage() {
               {dated.length} terminiert · {undatedOpen.length} offen ohne Datum
             </p>
           </div>
-          <div className="flex gap-1">
-            <button onClick={() => scrollBy(-7)} className="p-1.5 rounded border bg-background hover:bg-muted" aria-label="Woche zurück">
+          <div className="flex items-center gap-1">
+            <div className="inline-flex rounded border bg-background overflow-hidden mr-1">
+              {(['day', 'week', 'month'] as const).map((z) => (
+                <button
+                  key={z}
+                  onClick={() => setZoom(z)}
+                  className={`px-2 py-1 text-xs ${zoom === z ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted'}`}
+                >
+                  {z === 'day' ? 'Tag' : z === 'week' ? 'Woche' : 'Monat'}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => scrollBy(-7)} className="p-1.5 rounded border bg-background hover:bg-muted" aria-label="Zurück">
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
@@ -160,7 +179,7 @@ function TimelinePage() {
             >
               Heute
             </button>
-            <button onClick={() => scrollBy(7)} className="p-1.5 rounded border bg-background hover:bg-muted" aria-label="Woche vor">
+            <button onClick={() => scrollBy(7)} className="p-1.5 rounded border bg-background hover:bg-muted" aria-label="Vor">
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
@@ -235,24 +254,51 @@ function TimelinePage() {
                 </div>
               ))}
             </div>
-            {/* days row */}
-            <div className="flex" style={{ paddingLeft: labelWidth }}>
-              {Array.from({ length: totalDays }).map((_, i) => {
-                const d = addDays(range.start, i);
-                const isToday = diffDays(d, today) === 0;
-                const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                return (
-                  <div
-                    key={i}
-                    style={{ width: dayWidth }}
-                    className={`text-center text-[10px] leading-tight py-1 border-r ${isWeekend ? 'bg-muted/40' : ''} ${isToday ? 'bg-primary/15 font-semibold' : 'text-muted-foreground'}`}
-                  >
-                    <div>{WD[(d.getDay() + 6) % 7]}</div>
-                    <div className="tabular-nums">{fmtDay(d)}</div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* secondary row: day cells, week numbers, or hidden in month view */}
+            {zoom === 'day' && (
+              <div className="flex" style={{ paddingLeft: labelWidth }}>
+                {Array.from({ length: totalDays }).map((_, i) => {
+                  const d = addDays(range.start, i);
+                  const isToday = diffDays(d, today) === 0;
+                  const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                  return (
+                    <div
+                      key={i}
+                      style={{ width: dayWidth }}
+                      className={`text-center text-[10px] leading-tight py-1 border-r ${isWeekend ? 'bg-muted/40' : ''} ${isToday ? 'bg-primary/15 font-semibold' : 'text-muted-foreground'}`}
+                    >
+                      <div>{WD[(d.getDay() + 6) % 7]}</div>
+                      <div className="tabular-nums">{fmtDay(d)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {zoom === 'week' && (
+              <div className="flex" style={{ paddingLeft: labelWidth }}>
+                {(() => {
+                  const cells: React.ReactElement[] = [];
+                  let i = 0;
+                  while (i < totalDays) {
+                    const d = addDays(range.start, i);
+                    const dow = (d.getDay() + 6) % 7;
+                    const span = Math.min(7 - dow, totalDays - i);
+                    const todayHere = diffDays(today, d) >= 0 && diffDays(today, d) < span;
+                    cells.push(
+                      <div
+                        key={i}
+                        style={{ width: span * dayWidth }}
+                        className={`text-center text-[10px] leading-tight py-1 border-r truncate ${todayHere ? 'bg-primary/15 font-semibold' : 'text-muted-foreground'}`}
+                      >
+                        KW {isoWeek(d)}
+                      </div>,
+                    );
+                    i += span;
+                  }
+                  return cells;
+                })()}
+              </div>
+            )}
           </div>
 
           {/* Today vertical line */}
