@@ -9,6 +9,7 @@ import { CompanyBadge } from '@/components/company-badge';
 import { StatusIcon } from '@/lib/status-icon';
 import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
+import { useStatusMeta } from '@/lib/use-status-meta';
 import { toast } from 'sonner';
 import { Search, X, LogOut } from 'lucide-react';
 import { undoStore } from '@/lib/undo-store';
@@ -363,7 +364,8 @@ function TasksPage() {
             )}
           </div>
           <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-0.5">
-            {STATUS_ORDER.map((s) => {
+            {statusMeta.order.map((s) => {
+              const m = statusMeta.meta[s];
               const active = statusFilter.has(s);
               return (
                 <button
@@ -371,7 +373,7 @@ function TasksPage() {
                   onClick={() => setStatusFilter((cur) => toggleSetItem(cur, s))}
                   className={`shrink-0 inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full border transition ${active ? 'bg-foreground text-background border-foreground' : 'bg-background text-muted-foreground hover:bg-muted'}`}
                 >
-                  <StatusIcon status={s} className="h-3 w-3" /> {STATUS_LABEL[s]}
+                  <StatusIcon status={s} className="h-3 w-3" color={m.color ?? undefined} label={m.label} /> {m.label}
                 </button>
               );
             })}
