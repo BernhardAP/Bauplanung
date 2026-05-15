@@ -1,0 +1,1 @@
+UPDATE tasks SET title = trim(regexp_replace(title, '\s*\([^(),]+\)\s*$', '')) WHERE company_id IS NOT NULL AND title ~ '\s*\([^(),]+\)\s*$';
