@@ -45,6 +45,8 @@ export function TaskRow({
   onToggleExpand, onToggleChildren, onEdit, onCycleStatus, onIndent, onOutdent, onAddSubtask,
   onLongPressStart,
 }: Props) {
+  const { meta: statusMeta } = useStatusMeta();
+  const sm = statusMeta[task.status];
   const x = useMotionValue(0);
   const bg = useTransform(x, [-120, -40, 0, 40, 120],
     ['oklch(0.85 0.05 250 / 0.4)', 'transparent', 'transparent', 'transparent', 'oklch(0.82 0.16 85 / 0.4)']);
@@ -166,8 +168,8 @@ export function TaskRow({
               gridTemplateColumns: 'auto minmax(0, 1fr) 180px 160px 90px auto',
             }}
           >
-            <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0 mt-0.5" title={STATUS_LABEL[task.status]}>
-              <StatusIcon status={task.status} className="h-5 w-5" />
+            <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0 mt-0.5" title={sm.label}>
+              <StatusIcon status={task.status} className="h-5 w-5" color={sm.color ?? undefined} label={sm.label} />
             </button>
             <button onClick={onRowClick} className="text-left min-w-0 flex items-start gap-1.5">
               {hasChildren && (
@@ -190,7 +192,7 @@ export function TaskRow({
             <div className="text-xs text-muted-foreground tabular-nums truncate">
               {dateText ? <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" /> {dateText}</span> : <span className="text-muted-foreground/60">—</span>}
             </div>
-            <div className="text-xs text-muted-foreground">{STATUS_LABEL[task.status]}</div>
+            <div className="text-xs text-muted-foreground">{sm.label}</div>
             <button onClick={onEdit} className="p-1 -m-1 text-muted-foreground hover:text-foreground" aria-label="Bearbeiten">
               <Pencil className="h-4 w-4" />
             </button>
@@ -213,7 +215,7 @@ export function TaskRow({
                   <Calendar className="h-3 w-3" /> {dateText}
                 </div>
               )}
-              <div className="text-xs text-muted-foreground">Status: {STATUS_LABEL[task.status]}</div>
+              <div className="text-xs text-muted-foreground">Status: {sm.label}</div>
               {task.notes && (
                 <div className="text-xs whitespace-pre-wrap text-foreground/80 flex gap-1">
                   <FileText className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground" />
