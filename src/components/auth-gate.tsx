@@ -49,7 +49,7 @@ function LoginScreen() {
     setError(null); setInfo(null);
     const mail = email.trim().toLowerCase();
     if (!ALLOWED.includes(mail)) {
-      setError('Diese E-Mail-Adresse ist nicht für den Zugriff freigegeben.');
+      setError('Anmeldung fehlgeschlagen.');
       return;
     }
     if (password.length < 8) {
@@ -86,14 +86,14 @@ function LoginScreen() {
     setError(null); setInfo(null);
     const mail = email.trim().toLowerCase();
     if (!ALLOWED.includes(mail)) {
-      setError('Bitte zuerst die freigegebene E-Mail eintragen.');
+      setError('Anmeldung fehlgeschlagen.');
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(mail, {
       redirectTo: window.location.origin,
     });
     if (error) setError(error.message);
-    else setInfo('Wenn ein Konto existiert, wurde eine Mail zum Zurücksetzen verschickt.');
+    else setInfo('Falls ein Konto existiert, wurde eine E-Mail verschickt.');
   }
 
   return (
@@ -101,10 +101,10 @@ function LoginScreen() {
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-2xl border p-6 shadow-sm">
         <div className="flex items-center gap-2">
           <Lock className="h-4 w-4" />
-          <h1 className="text-lg font-semibold">Bauplanung</h1>
+          <h1 className="text-lg font-semibold">Anmeldung</h1>
         </div>
         <p className="text-xs text-muted-foreground">
-          Zugriff nur für Gisela und Bernhard. Beim ersten Mal bitte „Konto anlegen" wählen und ein Passwort vergeben.
+          Bitte mit Zugangsdaten anmelden.
         </p>
 
         <div className="flex gap-1 text-sm">
