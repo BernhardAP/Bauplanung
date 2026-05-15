@@ -28,6 +28,9 @@ export interface Task {
   start_date: string | null;
   end_date: string | null;
   notes: string | null;
+  planned_cost: number | null;
+  offered_price: number | null;
+  final_price: number | null;
   created_at: string;
 }
 

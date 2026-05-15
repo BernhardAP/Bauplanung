@@ -238,6 +238,27 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
             </div>
           </div>
 
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label htmlFor="planned_cost" className="text-xs">Geplante Kosten (€)</Label>
+              <Input id="planned_cost" type="number" inputMode="decimal" step="0.01" value={draft.planned_cost ?? ''}
+                onChange={(e) => setDraft({ ...draft, planned_cost: e.target.value === '' ? null : Number(e.target.value) })}
+                onBlur={() => save.mutate({ planned_cost: draft.planned_cost })} />
+            </div>
+            <div>
+              <Label htmlFor="offered_price" className="text-xs">Angebotener Preis (€)</Label>
+              <Input id="offered_price" type="number" inputMode="decimal" step="0.01" value={draft.offered_price ?? ''}
+                onChange={(e) => setDraft({ ...draft, offered_price: e.target.value === '' ? null : Number(e.target.value) })}
+                onBlur={() => save.mutate({ offered_price: draft.offered_price })} />
+            </div>
+            <div>
+              <Label htmlFor="final_price" className="text-xs">Finaler Preis (€)</Label>
+              <Input id="final_price" type="number" inputMode="decimal" step="0.01" value={draft.final_price ?? ''}
+                onChange={(e) => setDraft({ ...draft, final_price: e.target.value === '' ? null : Number(e.target.value) })}
+                onBlur={() => save.mutate({ final_price: draft.final_price })} />
+            </div>
+          </div>
+
           <div>
             <Label htmlFor="notes" className="text-xs">Notizen</Label>
             <Textarea id="notes" rows={4} value={draft.notes ?? ''}
