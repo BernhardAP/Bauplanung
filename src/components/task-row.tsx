@@ -49,6 +49,13 @@ export function TaskRow({
   // For leaves: clicking toggles inline detail view.
   const onRowClick = hasChildren ? (onToggleChildren ?? onToggleExpand) : onToggleExpand;
 
+  const { data: attachments = [] } = useQuery({
+    queryKey: ['attachments', task.id],
+    queryFn: () => fetchAttachments(task.id),
+    enabled: expanded && attachmentCount > 0,
+    staleTime: 30_000,
+  });
+
   return (
     <div className="relative">
       <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none text-muted-foreground">
