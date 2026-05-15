@@ -21,8 +21,9 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["attachment_kind"]
           mime_type: string | null
-          storage_path: string
+          storage_path: string | null
           task_id: string
+          url: string | null
         }
         Insert: {
           created_at?: string
@@ -30,8 +31,9 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["attachment_kind"]
           mime_type?: string | null
-          storage_path: string
+          storage_path?: string | null
           task_id: string
+          url?: string | null
         }
         Update: {
           created_at?: string
@@ -39,8 +41,9 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["attachment_kind"]
           mime_type?: string | null
-          storage_path?: string
+          storage_path?: string | null
           task_id?: string
+          url?: string | null
         }
         Relationships: [
           {
@@ -162,7 +165,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      attachment_kind: "document" | "email"
+      attachment_kind: "document" | "email" | "link"
       task_status:
         | "open"
         | "in_progress"
@@ -297,7 +300,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      attachment_kind: ["document", "email"],
+      attachment_kind: ["document", "email", "link"],
       task_status: [
         "open",
         "in_progress",

@@ -1,5 +1,5 @@
 export type TaskStatus = 'open' | 'in_progress' | 'waiting' | 'done' | 'blocked' | 'question';
-export type AttachmentKind = 'document' | 'email';
+export type AttachmentKind = 'document' | 'email' | 'link';
 
 export interface Company {
   id: string;
@@ -34,7 +34,8 @@ export interface Attachment {
   id: string;
   task_id: string;
   filename: string;
-  storage_path: string;
+  storage_path: string | null;
+  url: string | null;
   mime_type: string | null;
   kind: AttachmentKind;
   created_at: string;
