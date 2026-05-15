@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TimelineRouteImport } from './routes/timeline'
 import { Route as BackupRouteImport } from './routes/backup'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
 import { Route as CompaniesIdRouteImport } from './routes/companies.$id'
 
+const TimelineRoute = TimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BackupRoute = BackupRouteImport.update({
   id: '/backup',
   path: '/backup',
@@ -38,12 +44,14 @@ const CompaniesIdRoute = CompaniesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/backup': typeof BackupRoute
+  '/timeline': typeof TimelineRoute
   '/companies/$id': typeof CompaniesIdRoute
   '/companies/': typeof CompaniesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/backup': typeof BackupRoute
+  '/timeline': typeof TimelineRoute
   '/companies/$id': typeof CompaniesIdRoute
   '/companies': typeof CompaniesIndexRoute
 }
@@ -51,26 +59,41 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/backup': typeof BackupRoute
+  '/timeline': typeof TimelineRoute
   '/companies/$id': typeof CompaniesIdRoute
   '/companies/': typeof CompaniesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/backup' | '/companies/$id' | '/companies/'
+  fullPaths: '/' | '/backup' | '/timeline' | '/companies/$id' | '/companies/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/backup' | '/companies/$id' | '/companies'
-  id: '__root__' | '/' | '/backup' | '/companies/$id' | '/companies/'
+  to: '/' | '/backup' | '/timeline' | '/companies/$id' | '/companies'
+  id:
+    | '__root__'
+    | '/'
+    | '/backup'
+    | '/timeline'
+    | '/companies/$id'
+    | '/companies/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BackupRoute: typeof BackupRoute
+  TimelineRoute: typeof TimelineRoute
   CompaniesIdRoute: typeof CompaniesIdRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/timeline': {
+      id: '/timeline'
+      path: '/timeline'
+      fullPath: '/timeline'
+      preLoaderRoute: typeof TimelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/backup': {
       id: '/backup'
       path: '/backup'
@@ -105,6 +128,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BackupRoute: BackupRoute,
+  TimelineRoute: TimelineRoute,
   CompaniesIdRoute: CompaniesIdRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
 }
