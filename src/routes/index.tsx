@@ -11,6 +11,8 @@ import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
 import { toast } from 'sonner';
 import { Search, X } from 'lucide-react';
+import { undoStore } from '@/lib/undo-store';
+import { UndoButton } from '@/components/undo-button';
 
 export const Route = createFileRoute('/')({
   head: () => ({
