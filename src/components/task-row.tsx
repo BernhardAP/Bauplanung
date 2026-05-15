@@ -201,12 +201,20 @@ export function TaskRow({
                   </ul>
                 </div>
               )}
-              <button
-                onClick={onEdit}
-                className="mt-1 inline-flex items-center gap-1 text-xs px-2 py-1 rounded border bg-background hover:bg-accent"
-              >
-                <Pencil className="h-3.5 w-3.5" /> Bearbeiten
-              </button>
+              <div className="mt-1 flex items-center gap-2">
+                <button
+                  onClick={onEdit}
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border bg-background hover:bg-accent"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Bearbeiten
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onAddSubtask(); }}
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border bg-background hover:bg-accent"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Unteraufgabe
+                </button>
+              </div>
             </div>
           )}
         </div>
