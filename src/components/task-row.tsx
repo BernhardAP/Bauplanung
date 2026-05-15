@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip, ExternalLink } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip, ExternalLink, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { StatusIcon } from '@/lib/status-icon';
 import { CompanyBadge } from '@/components/company-badge';
