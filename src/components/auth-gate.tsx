@@ -86,14 +86,14 @@ function LoginScreen() {
     setError(null); setInfo(null);
     const mail = email.trim().toLowerCase();
     if (!ALLOWED.includes(mail)) {
-      setError('Bitte zuerst die freigegebene E-Mail eintragen.');
+      setError('Anmeldung fehlgeschlagen.');
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(mail, {
       redirectTo: window.location.origin,
     });
     if (error) setError(error.message);
-    else setInfo('Wenn ein Konto existiert, wurde eine Mail zum Zurücksetzen verschickt.');
+    else setInfo('Falls ein Konto existiert, wurde eine E-Mail verschickt.');
   }
 
   return (
