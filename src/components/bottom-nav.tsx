@@ -1,11 +1,12 @@
 import { Link, useRouterState } from '@tanstack/react-router';
-import { ListChecks, Building2 } from 'lucide-react';
+import { ListChecks, Building2, Database } from 'lucide-react';
 
 export function BottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const items = [
     { to: '/', label: 'Aufgaben', icon: ListChecks, match: (p: string) => p === '/' },
     { to: '/companies', label: 'Unternehmen', icon: Building2, match: (p: string) => p.startsWith('/companies') },
+    { to: '/backup', label: 'Backup', icon: Database, match: (p: string) => p.startsWith('/backup') },
   ] as const;
 
   return (
