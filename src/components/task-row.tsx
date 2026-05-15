@@ -79,13 +79,17 @@ export function TaskRow({
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0" aria-label="Status">
               <StatusIcon status={task.status} className="h-5 w-5" />
             </button>
-            <button onClick={onToggleExpand} className="flex-1 text-left flex items-center gap-2 min-w-0">
+            <button onClick={onRowClick} className="flex-1 text-left flex items-center gap-2 min-w-0">
               <span className={`flex-1 truncate text-sm ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
                 {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
               </span>
               {company && <CompanyBadge company={company} />}
               {dateText && <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">{fmtDate(task.end_date ?? task.start_date)}</span>}
-              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} />
+              {hasChildren ? (
+                <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${childrenCollapsed ? '' : 'rotate-90'}`} />
+              ) : (
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} />
+              )}
             </button>
           </div>
 
