@@ -32,8 +32,8 @@ function fmtRange(start: string | null, end: string | null) {
 }
 
 export function TaskRow({
-  task, company, expanded, attachmentCount = 0,
-  onToggleExpand, onEdit, onCycleStatus, onIndent, onOutdent,
+  task, company, expanded, hasChildren = false, childrenCollapsed = false, attachmentCount = 0,
+  onToggleExpand, onToggleChildren, onEdit, onCycleStatus, onIndent, onOutdent,
 }: Props) {
   const x = useMotionValue(0);
   const bg = useTransform(x, [-120, -40, 0, 40, 120],
@@ -42,6 +42,9 @@ export function TaskRow({
   const rightHintOpacity = useTransform(x, [0, 20, 120], [0, 0, 1]);
   const dateText = fmtRange(task.start_date, task.end_date);
   const accentColor = company?.color ?? null;
+  // For parents: clicking the row toggles children visibility.
+  // For leaves: clicking toggles inline detail view.
+  const onRowClick = hasChildren ? (onToggleChildren ?? onToggleExpand) : onToggleExpand;
 
   return (
     <div className="relative">
