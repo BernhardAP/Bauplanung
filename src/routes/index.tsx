@@ -326,13 +326,16 @@ function TasksPage() {
   return (
     <div>
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
-        <div className="px-4 py-3">
-          <h1 className="text-lg md:text-xl font-semibold">Bauplanung Leiwen</h1>
-          <p className="text-xs text-muted-foreground">
-            {filtered.length}{filterActive ? ` / ${ordered.length}` : ''} Aufgaben ·{' '}
-            <span className="md:hidden">Tippen klappt auf · Swipe ⇆ Hierarchie</span>
-            <span className="hidden md:inline">Tippen klappt auf · ✏️ bearbeiten · Swipe ⇆ Hierarchie</span>
-          </p>
+        <div className="px-4 py-3 flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-lg md:text-xl font-semibold">Bauplanung Leiwen</h1>
+            <p className="text-xs text-muted-foreground">
+              {filtered.length}{filterActive ? ` / ${ordered.length}` : ''} Aufgaben ·{' '}
+              <span className="md:hidden">Tippen klappt auf · Swipe ⇆ Hierarchie</span>
+              <span className="hidden md:inline">Tippen klappt auf · ✏️ bearbeiten · Swipe ⇆ Hierarchie</span>
+            </p>
+          </div>
+          <UndoButton />
         </div>
 
         {/* Filter bar */}
