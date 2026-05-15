@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TimelineRouteImport } from './routes/timeline'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as BackupRouteImport } from './routes/backup'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
@@ -18,6 +19,11 @@ import { Route as CompaniesIdRouteImport } from './routes/companies.$id'
 const TimelineRoute = TimelineRouteImport.update({
   id: '/timeline',
   path: '/timeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BackupRoute = BackupRouteImport.update({
@@ -44,6 +50,7 @@ const CompaniesIdRoute = CompaniesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/backup': typeof BackupRoute
+  '/settings': typeof SettingsRoute
   '/timeline': typeof TimelineRoute
   '/companies/$id': typeof CompaniesIdRoute
   '/companies/': typeof CompaniesIndexRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/backup': typeof BackupRoute
+  '/settings': typeof SettingsRoute
   '/timeline': typeof TimelineRoute
   '/companies/$id': typeof CompaniesIdRoute
   '/companies': typeof CompaniesIndexRoute
@@ -59,19 +67,33 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/backup': typeof BackupRoute
+  '/settings': typeof SettingsRoute
   '/timeline': typeof TimelineRoute
   '/companies/$id': typeof CompaniesIdRoute
   '/companies/': typeof CompaniesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/backup' | '/timeline' | '/companies/$id' | '/companies/'
+  fullPaths:
+    | '/'
+    | '/backup'
+    | '/settings'
+    | '/timeline'
+    | '/companies/$id'
+    | '/companies/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/backup' | '/timeline' | '/companies/$id' | '/companies'
+  to:
+    | '/'
+    | '/backup'
+    | '/settings'
+    | '/timeline'
+    | '/companies/$id'
+    | '/companies'
   id:
     | '__root__'
     | '/'
     | '/backup'
+    | '/settings'
     | '/timeline'
     | '/companies/$id'
     | '/companies/'
@@ -80,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BackupRoute: typeof BackupRoute
+  SettingsRoute: typeof SettingsRoute
   TimelineRoute: typeof TimelineRoute
   CompaniesIdRoute: typeof CompaniesIdRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
@@ -92,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/timeline'
       fullPath: '/timeline'
       preLoaderRoute: typeof TimelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/backup': {
@@ -128,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BackupRoute: BackupRoute,
+  SettingsRoute: SettingsRoute,
   TimelineRoute: TimelineRoute,
   CompaniesIdRoute: CompaniesIdRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,

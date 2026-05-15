@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { fetchAttachments, fetchCompanies } from '@/lib/queries';
 import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_LABEL, STATUS_ORDER } from '@/lib/types';
+import { useStatusMeta } from '@/lib/use-status-meta';
 import { StatusIcon } from '@/lib/status-icon';
 import { OnedrivePicker } from '@/components/onedrive-picker';
 import { OutlookPicker } from '@/components/outlook-picker';
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
+  const statusMeta = useStatusMeta();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Task | null>(null);
   const [extraCc, setExtraCc] = useState<string[]>([]);
@@ -193,11 +195,14 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
             <Select value={draft.status} onValueChange={(v) => patch('status', v as TaskStatus)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {STATUS_ORDER.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    <span className="inline-flex items-center gap-2"><StatusIcon status={s} className="h-4 w-4" /> {STATUS_LABEL[s]}</span>
-                  </SelectItem>
-                ))}
+                {statusMeta.order.map((s) => {
+                  const m = statusMeta.meta[s];
+                  return (
+                    <SelectItem key={s} value={s}>
+                      <span className="inline-flex items-center gap-2"><StatusIcon status={s} className="h-4 w-4" color={m.color ?? undefined} label={m.label} /> {m.label}</span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
