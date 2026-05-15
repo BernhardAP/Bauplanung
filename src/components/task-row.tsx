@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip, ExternalLink } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { StatusIcon } from '@/lib/status-icon';
 import { CompanyBadge } from '@/components/company-badge';
+import { fetchAttachments } from '@/lib/queries';
+import { supabase } from '@/integrations/supabase/client';
 import type { Task, TaskStatus, Company } from '@/lib/types';
 import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
 
