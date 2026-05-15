@@ -12,6 +12,7 @@ export interface Company {
   web: string | null;
   notes: string | null;
   is_default_cc: boolean;
+  color: string | null;
   created_at: string;
 }
 
