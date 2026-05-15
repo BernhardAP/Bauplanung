@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCompanies, fetchTasks } from '@/lib/queries';
 import { TaskDetailSheet } from '@/components/task-detail-sheet';
@@ -277,7 +277,7 @@ function TimelinePage() {
             {zoom === 'week' && (
               <div className="flex" style={{ paddingLeft: labelWidth }}>
                 {(() => {
-                  const cells: JSX.Element[] = [];
+                  const cells: React.ReactElement[] = [];
                   let i = 0;
                   while (i < totalDays) {
                     const d = addDays(range.start, i);
