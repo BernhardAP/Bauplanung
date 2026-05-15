@@ -14,6 +14,7 @@ import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_LABEL, STATUS_ORDER } from '@/lib/types';
 import { StatusIcon } from '@/lib/status-icon';
 import { OnedrivePicker } from '@/components/onedrive-picker';
+import { OutlookPicker } from '@/components/outlook-picker';
 import { toast } from 'sonner';
 import { undoStore } from '@/lib/undo-store';
 
