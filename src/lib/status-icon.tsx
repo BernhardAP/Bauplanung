@@ -22,14 +22,15 @@ export function StatusIcon({
   color?: string;
   label?: string;
 }) {
-  const m = map[status];
-  const Icon = m.Icon;
+  const m = (map as Record<string, { Icon: typeof Circle; color: string; label: string } | undefined>)[status];
+  const Icon = m?.Icon ?? Circle;
   const useCustom = !!color;
+  const fallbackColor = m?.color ?? 'text-muted-foreground';
   return (
     <Icon
-      className={`${useCustom ? '' : m.color} ${className}`}
+      className={`${useCustom ? '' : fallbackColor} ${className}`}
       style={useCustom ? { color } : undefined}
-      aria-label={label ?? m.label}
+      aria-label={label ?? m?.label ?? status}
     />
   );
 }
