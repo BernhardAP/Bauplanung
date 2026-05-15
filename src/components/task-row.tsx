@@ -171,8 +171,33 @@ export function TaskRow({
                 </div>
               )}
               {attachmentCount > 0 && (
-                <div className="text-xs text-muted-foreground inline-flex items-center gap-1">
-                  <Paperclip className="h-3 w-3" /> {attachmentCount} Anhang{attachmentCount === 1 ? '' : 'e'}
+                <div className="space-y-1">
+                  <div className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                    <Paperclip className="h-3 w-3" /> {attachmentCount} Dokument{attachmentCount === 1 ? '' : 'e'}
+                  </div>
+                  <ul className="space-y-0.5">
+                    {attachments.map((a) => {
+                      const href = a.kind === 'link'
+                        ? a.url ?? '#'
+                        : (a.storage_path ? supabase.storage.from('attachments').getPublicUrl(a.storage_path).data.publicUrl : '#');
+                      const icon = a.kind === 'link' ? '🔗' : a.kind === 'email' ? '✉️' : '📎';
+                      return (
+                        <li key={a.id}>
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs inline-flex items-center gap-1 max-w-full hover:underline underline-offset-2"
+                          >
+                            <span aria-hidden>{icon}</span>
+                            <span className="truncate">{a.filename}</span>
+                            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground" />
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               )}
               <button
