@@ -230,8 +230,11 @@ function TasksPage() {
               task={t}
               company={t.company_id ? companyById[t.company_id] ?? null : null}
               expanded={expanded.has(t.id)}
+              hasChildren={(childrenByParent.get(t.id) ?? 0) > 0}
+              childrenCollapsed={collapsedParents.has(t.id)}
               attachmentCount={attCount.get(t.id) ?? 0}
               onToggleExpand={() => toggleExpand(t.id)}
+              onToggleChildren={() => toggleChildren(t.id)}
               onEdit={() => setEditTaskId(t.id)}
               onCycleStatus={() => updateTask.mutate({ id: t.id, patch: { status: nextStatus(t.status) } })}
               onIndent={() => handleIndent(t)}
