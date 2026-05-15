@@ -130,9 +130,12 @@ export type Database = {
           created_at: string
           depth: number
           end_date: string | null
+          final_price: number | null
           id: string
           notes: string | null
+          offered_price: number | null
           parent_id: string | null
+          planned_cost: number | null
           sort_order: number
           start_date: string | null
           status: string
@@ -143,9 +146,12 @@ export type Database = {
           created_at?: string
           depth?: number
           end_date?: string | null
+          final_price?: number | null
           id?: string
           notes?: string | null
+          offered_price?: number | null
           parent_id?: string | null
+          planned_cost?: number | null
           sort_order?: number
           start_date?: string | null
           status?: string
@@ -156,9 +162,12 @@ export type Database = {
           created_at?: string
           depth?: number
           end_date?: string | null
+          final_price?: number | null
           id?: string
           notes?: string | null
+          offered_price?: number | null
           parent_id?: string | null
+          planned_cost?: number | null
           sort_order?: number
           start_date?: string | null
           status?: string
