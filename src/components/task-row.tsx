@@ -276,16 +276,31 @@ export function TaskRow({
 
 export function NewTaskRow({ depth = 0, onCreate }: { depth?: number; onCreate: (title: string) => void }) {
   const [val, setVal] = useState('');
+  const submit = () => {
+    const t = val.trim();
+    if (!t) return;
+    onCreate(t);
+    setVal('');
+  };
   return (
-    <div className="border-b bg-background">
+    <div className="border-b bg-background flex items-center gap-2 pr-2">
+      <Plus className="h-4 w-4 shrink-0 text-muted-foreground" style={{ marginLeft: 12 + depth * 16 }} />
       <input
         value={val}
         onChange={(e) => setVal(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter' && val.trim()) { onCreate(val.trim()); setVal(''); } }}
-        placeholder="+ Neue Aufgabe…"
-        className="w-full bg-transparent py-2.5 md:py-3 pr-3 text-sm outline-none placeholder:text-muted-foreground"
-        style={{ paddingLeft: 12 + depth * 16 + 28 }}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
+        onBlur={submit}
+        placeholder="Neue Aufgabe…"
+        className="flex-1 bg-transparent py-2.5 md:py-3 text-sm outline-none placeholder:text-muted-foreground"
       />
+      <button
+        type="button"
+        onClick={submit}
+        disabled={!val.trim()}
+        className="shrink-0 text-xs px-2 py-1 rounded border bg-background hover:bg-accent disabled:opacity-40 disabled:hover:bg-background"
+      >
+        Hinzufügen
+      </button>
     </div>
   );
 }
