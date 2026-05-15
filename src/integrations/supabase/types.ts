@@ -103,18 +103,21 @@ export type Database = {
       status_settings: {
         Row: {
           color: string | null
+          icon: string | null
           label: string
           sort_order: number
           status: string
         }
         Insert: {
           color?: string | null
+          icon?: string | null
           label: string
           sort_order?: number
           status: string
         }
         Update: {
           color?: string | null
+          icon?: string | null
           label?: string
           sort_order?: number
           status?: string
