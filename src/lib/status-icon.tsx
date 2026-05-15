@@ -11,9 +11,27 @@ const map = {
   done: { Icon: CheckCircle2, color: 'text-status-done', label: STATUS_LABEL.done },
 } as const;
 
-export function StatusIcon({ status, className = '' }: { status: TaskStatus; className?: string }) {
-  const { Icon, color } = map[status];
-  return <Icon className={`${color} ${className}`} aria-label={map[status].label} />;
+export function StatusIcon({
+  status,
+  className = '',
+  color,
+  label,
+}: {
+  status: TaskStatus;
+  className?: string;
+  color?: string;
+  label?: string;
+}) {
+  const m = map[status];
+  const Icon = m.Icon;
+  const useCustom = !!color;
+  return (
+    <Icon
+      className={`${useCustom ? '' : m.color} ${className}`}
+      style={useCustom ? { color } : undefined}
+      aria-label={label ?? m.label}
+    />
+  );
 }
 
 export { Circle };
