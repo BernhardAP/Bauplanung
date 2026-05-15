@@ -336,7 +336,12 @@ function TasksPage() {
               <span className="hidden md:inline">Tippen klappt auf · ✏️ bearbeiten · Swipe ⇆ Hierarchie</span>
             </p>
           </div>
-          <UndoButton />
+          <div className="flex items-center gap-1">
+            <UndoButton />
+            <Button variant="ghost" size="icon" title="Abmelden" onClick={() => supabase.auth.signOut()}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Filter bar */}
