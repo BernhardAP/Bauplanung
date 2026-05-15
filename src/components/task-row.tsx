@@ -40,7 +40,9 @@ function fmtRange(start: string | null, end: string | null) {
 
 export function TaskRow({
   task, company, expanded, hasChildren = false, childrenCollapsed = false, attachmentCount = 0,
+  isDropTarget = false, dragLocked = false,
   onToggleExpand, onToggleChildren, onEdit, onCycleStatus, onIndent, onOutdent, onAddSubtask,
+  onLongPressStart,
 }: Props) {
   const x = useMotionValue(0);
   const bg = useTransform(x, [-120, -40, 0, 40, 120],
