@@ -260,6 +260,7 @@ function TasksPage() {
               onCycleStatus={() => updateTask.mutate({ id: t.id, patch: { status: nextStatus(t.status) } })}
               onIndent={() => handleIndent(t)}
               onOutdent={() => handleOutdent(t)}
+              onAddSubtask={() => handleAddSubtask(t)}
             />
           </li>
         ))}
