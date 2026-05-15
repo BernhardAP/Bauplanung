@@ -14,6 +14,7 @@ import { Search, X, LogOut } from 'lucide-react';
 import { undoStore } from '@/lib/undo-store';
 import { UndoButton } from '@/components/undo-button';
 import { Button } from '@/components/ui/button';
+import { ChangePasswordDialog } from '@/components/change-password-dialog';
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -338,6 +339,7 @@ function TasksPage() {
           </div>
           <div className="flex items-center gap-1">
             <UndoButton />
+            <ChangePasswordDialog />
             <Button variant="ghost" size="icon" title="Abmelden" onClick={() => supabase.auth.signOut()}>
               <LogOut className="h-4 w-4" />
             </Button>
