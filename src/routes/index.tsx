@@ -129,6 +129,13 @@ function TasksPage() {
       return n;
     });
   }
+  function toggleChildren(id: string) {
+    setCollapsedParents((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
   function toggleSetItem<T>(set: Set<T>, item: T): Set<T> {
     const n = new Set(set);
     if (n.has(item)) n.delete(item); else n.add(item);
