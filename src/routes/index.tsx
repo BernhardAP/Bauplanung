@@ -96,14 +96,46 @@ function TasksPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Undoable wrapper around updateTask: captures previous values for the
+  // patched keys and pushes an inverse onto the undo stack.
+  function applyUpdate(id: string, patch: Partial<Task>, label: string) {
+    const current = tasks.find((t) => t.id === id);
+    if (!current) return;
+    const prev: Partial<Task> = {};
+    for (const k of Object.keys(patch) as (keyof Task)[]) {
+      (prev as Record<string, unknown>)[k] = current[k];
+    }
+    updateTask.mutate({ id, patch });
+    undoStore.push(label, async () => {
+      const { error } = await supabase.from('tasks').update(prev).eq('id', id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+    });
+  }
+
   const createTask = useMutation({
     mutationFn: async ({ title, parent_id, depth, sort_order }: {
       title: string; parent_id: string | null; depth: number; sort_order: number;
     }) => {
-      const { error } = await supabase.from('tasks').insert({ title, parent_id, depth, sort_order });
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({ title, parent_id, depth, sort_order })
+        .select('id')
+        .single();
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
+    onSuccess: (data, vars) => {
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+      if (data?.id) {
+        const newId = data.id;
+        undoStore.push(`Aufgabe „${vars.title || 'ohne Titel'}" erstellt`, async () => {
+          const { error } = await supabase.from('tasks').delete().eq('id', newId);
+          if (error) throw error;
+          qc.invalidateQueries({ queryKey: ['tasks'] });
+        });
+      }
+    },
   });
 
   async function handleAddSubtask(parent: Task) {
@@ -124,7 +156,15 @@ function TasksPage() {
     if (error) { toast.error(error.message); return; }
     setCollapsedParents((s) => { const n = new Set(s); n.delete(parent.id); return n; });
     qc.invalidateQueries({ queryKey: ['tasks'] });
-    if (data?.id) setEditTaskId(data.id);
+    if (data?.id) {
+      const newId = data.id;
+      undoStore.push(`Unteraufgabe erstellt`, async () => {
+        const { error: e } = await supabase.from('tasks').delete().eq('id', newId);
+        if (e) throw e;
+        qc.invalidateQueries({ queryKey: ['tasks'] });
+      });
+      setEditTaskId(newId);
+    }
   }
 
   // ----- Long-press drag-to-reparent -----
