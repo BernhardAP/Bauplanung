@@ -154,8 +154,19 @@ function TimelinePage() {
               {dated.length} terminiert · {undatedOpen.length} offen ohne Datum
             </p>
           </div>
-          <div className="flex gap-1">
-            <button onClick={() => scrollBy(-7)} className="p-1.5 rounded border bg-background hover:bg-muted" aria-label="Woche zurück">
+          <div className="flex items-center gap-1">
+            <div className="inline-flex rounded border bg-background overflow-hidden mr-1">
+              {(['day', 'week', 'month'] as const).map((z) => (
+                <button
+                  key={z}
+                  onClick={() => setZoom(z)}
+                  className={`px-2 py-1 text-xs ${zoom === z ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted'}`}
+                >
+                  {z === 'day' ? 'Tag' : z === 'week' ? 'Woche' : 'Monat'}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => scrollBy(-7)} className="p-1.5 rounded border bg-background hover:bg-muted" aria-label="Zurück">
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
@@ -168,7 +179,7 @@ function TimelinePage() {
             >
               Heute
             </button>
-            <button onClick={() => scrollBy(7)} className="p-1.5 rounded border bg-background hover:bg-muted" aria-label="Woche vor">
+            <button onClick={() => scrollBy(7)} className="p-1.5 rounded border bg-background hover:bg-muted" aria-label="Vor">
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
