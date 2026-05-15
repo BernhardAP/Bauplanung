@@ -66,8 +66,12 @@ export function TaskRow({
   const pressStart = useRef<{ x: number; y: number } | null>(null);
   const pressFired = useRef(false);
 
-  const clearPress = () => {
-    if (pressTimer.current !== null) { window.clearTimeout(pressTimer.current); pressTimer.current = null; }
+  const clearPress = (reason?: string) => {
+    if (pressTimer.current !== null) {
+      console.log('[longpress] cancel', task.id.slice(0, 6), reason);
+      window.clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
     pressStart.current = null;
   };
 
@@ -75,21 +79,28 @@ export function TaskRow({
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     pressFired.current = false;
     pressStart.current = { x: e.clientX, y: e.clientY };
+    console.log('[longpress] down', task.id.slice(0, 6), e.pointerType);
     pressTimer.current = window.setTimeout(() => {
       pressFired.current = true;
+      console.log('[longpress] FIRE', task.id.slice(0, 6));
       if (navigator.vibrate) navigator.vibrate(30);
       onLongPressStart?.(pressStart.current?.x ?? 0, pressStart.current?.y ?? 0);
-    }, 400);
+    }, 350);
   };
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!pressStart.current || pressFired.current) return;
     const dx = e.clientX - pressStart.current.x;
     const dy = e.clientY - pressStart.current.y;
-    if (Math.hypot(dx, dy) > 8) clearPress();
+    if (Math.hypot(dx, dy) > 12) clearPress(`move ${Math.round(Math.hypot(dx, dy))}`);
   };
 
   return (
-    <div className="relative" data-task-id={task.id}>
+    <div
+      className="relative select-none"
+      data-task-id={task.id}
+      style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
+      onContextMenu={(e) => e.preventDefault()}
+    >
       <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none text-muted-foreground">
         <motion.span style={{ opacity: leftHintOpacity }}><ChevronLeft className="h-5 w-5" /></motion.span>
         <motion.span style={{ opacity: rightHintOpacity }}><ChevronRight className="h-5 w-5" /></motion.span>
@@ -102,10 +113,11 @@ export function TaskRow({
         style={{ x, backgroundColor: bg }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={clearPress}
-        onPointerCancel={clearPress}
+        onPointerUp={() => clearPress('up')}
+        onPointerCancel={() => clearPress('cancel')}
+        onDragStart={() => clearPress('framer-drag')}
         onDragEnd={(_, info) => {
-          clearPress();
+          clearPress('drag-end');
           if (info.offset.x > 80) onIndent();
           else if (info.offset.x < -80) onOutdent();
         }}
