@@ -11,6 +11,8 @@ import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
 import { toast } from 'sonner';
 import { Search, X } from 'lucide-react';
+import { undoStore } from '@/lib/undo-store';
+import { UndoButton } from '@/components/undo-button';
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -94,14 +96,46 @@ function TasksPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Undoable wrapper around updateTask: captures previous values for the
+  // patched keys and pushes an inverse onto the undo stack.
+  function applyUpdate(id: string, patch: Partial<Task>, label: string) {
+    const current = tasks.find((t) => t.id === id);
+    if (!current) return;
+    const prev: Partial<Task> = {};
+    for (const k of Object.keys(patch) as (keyof Task)[]) {
+      (prev as Record<string, unknown>)[k] = current[k];
+    }
+    updateTask.mutate({ id, patch });
+    undoStore.push(label, async () => {
+      const { error } = await supabase.from('tasks').update(prev).eq('id', id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+    });
+  }
+
   const createTask = useMutation({
     mutationFn: async ({ title, parent_id, depth, sort_order }: {
       title: string; parent_id: string | null; depth: number; sort_order: number;
     }) => {
-      const { error } = await supabase.from('tasks').insert({ title, parent_id, depth, sort_order });
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({ title, parent_id, depth, sort_order })
+        .select('id')
+        .single();
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
+    onSuccess: (data, vars) => {
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+      if (data?.id) {
+        const newId = data.id;
+        undoStore.push(`Aufgabe „${vars.title || 'ohne Titel'}" erstellt`, async () => {
+          const { error } = await supabase.from('tasks').delete().eq('id', newId);
+          if (error) throw error;
+          qc.invalidateQueries({ queryKey: ['tasks'] });
+        });
+      }
+    },
   });
 
   async function handleAddSubtask(parent: Task) {
@@ -122,7 +156,15 @@ function TasksPage() {
     if (error) { toast.error(error.message); return; }
     setCollapsedParents((s) => { const n = new Set(s); n.delete(parent.id); return n; });
     qc.invalidateQueries({ queryKey: ['tasks'] });
-    if (data?.id) setEditTaskId(data.id);
+    if (data?.id) {
+      const newId = data.id;
+      undoStore.push(`Unteraufgabe erstellt`, async () => {
+        const { error: e } = await supabase.from('tasks').delete().eq('id', newId);
+        if (e) throw e;
+        qc.invalidateQueries({ queryKey: ['tasks'] });
+      });
+      setEditTaskId(newId);
+    }
   }
 
   // ----- Long-press drag-to-reparent -----
@@ -166,6 +208,14 @@ function TasksPage() {
       (m, t) => (t.parent_id === newParentId ? Math.max(m, t.sort_order) : m),
       0,
     );
+    // capture inverse for undo
+    const prevDragged = {
+      parent_id: dragged.parent_id,
+      depth: dragged.depth,
+      sort_order: dragged.sort_order,
+    };
+    const prevDescendants = descendants.map((d) => ({ id: d.id, depth: d.depth }));
+
     const { error: e1 } = await supabase.from('tasks').update({
       parent_id: newParentId,
       depth: newDepth,
@@ -179,6 +229,15 @@ function TasksPage() {
     setCollapsedParents((s) => { const n = new Set(s); n.delete(newParentId); return n; });
     qc.invalidateQueries({ queryKey: ['tasks'] });
     toast.success(`Verschoben unter „${newParent.title || 'Aufgabe'}"`);
+    undoStore.push(`Verschoben: „${dragged.title || 'Aufgabe'}"`, async () => {
+      const { error: u1 } = await supabase.from('tasks').update(prevDragged).eq('id', draggedId);
+      if (u1) throw u1;
+      for (const d of prevDescendants) {
+        const { error: u2 } = await supabase.from('tasks').update({ depth: d.depth }).eq('id', d.id);
+        if (u2) throw u2;
+      }
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+    });
   }
 
   function handleLongPressStart(taskId: string, x: number, y: number) {
@@ -228,13 +287,13 @@ function TasksPage() {
     const idx = sameParent.findIndex((t) => t.id === task.id);
     if (idx <= 0) { toast.info('Keine vorherige Schwester-Aufgabe zum Einrücken'); return; }
     const newParent = sameParent[idx - 1];
-    updateTask.mutate({ id: task.id, patch: { parent_id: newParent.id, depth: newParent.depth + 1 } });
+    applyUpdate(task.id, { parent_id: newParent.id, depth: newParent.depth + 1 }, `Eingerückt: „${task.title || 'Aufgabe'}"`);
   }
   function handleOutdent(task: Task) {
     if (!task.parent_id) { toast.info('Schon auf oberster Ebene'); return; }
     const parent = tasks.find((t) => t.id === task.parent_id);
     if (!parent) return;
-    updateTask.mutate({ id: task.id, patch: { parent_id: parent.parent_id, depth: parent.depth } });
+    applyUpdate(task.id, { parent_id: parent.parent_id, depth: parent.depth }, `Ausgerückt: „${task.title || 'Aufgabe'}"`);
   }
   function handleCreateAtEnd(title: string) {
     const maxOrder = tasks.reduce((m, t) => (t.parent_id === null ? Math.max(m, t.sort_order) : m), 0);
@@ -267,13 +326,16 @@ function TasksPage() {
   return (
     <div>
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
-        <div className="px-4 py-3">
-          <h1 className="text-lg md:text-xl font-semibold">Bauplanung Leiwen</h1>
-          <p className="text-xs text-muted-foreground">
-            {filtered.length}{filterActive ? ` / ${ordered.length}` : ''} Aufgaben ·{' '}
-            <span className="md:hidden">Tippen klappt auf · Swipe ⇆ Hierarchie</span>
-            <span className="hidden md:inline">Tippen klappt auf · ✏️ bearbeiten · Swipe ⇆ Hierarchie</span>
-          </p>
+        <div className="px-4 py-3 flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-lg md:text-xl font-semibold">Bauplanung Leiwen</h1>
+            <p className="text-xs text-muted-foreground">
+              {filtered.length}{filterActive ? ` / ${ordered.length}` : ''} Aufgaben ·{' '}
+              <span className="md:hidden">Tippen klappt auf · Swipe ⇆ Hierarchie</span>
+              <span className="hidden md:inline">Tippen klappt auf · ✏️ bearbeiten · Swipe ⇆ Hierarchie</span>
+            </p>
+          </div>
+          <UndoButton />
         </div>
 
         {/* Filter bar */}
@@ -357,7 +419,7 @@ function TasksPage() {
               onToggleExpand={() => toggleExpand(t.id)}
               onToggleChildren={() => toggleChildren(t.id)}
               onEdit={() => setEditTaskId(t.id)}
-              onCycleStatus={() => updateTask.mutate({ id: t.id, patch: { status: nextStatus(t.status) } })}
+              onCycleStatus={() => applyUpdate(t.id, { status: nextStatus(t.status) }, `Status: „${t.title || 'Aufgabe'}"`)}
               onIndent={() => handleIndent(t)}
               onOutdent={() => handleOutdent(t)}
               onAddSubtask={() => handleAddSubtask(t)}
