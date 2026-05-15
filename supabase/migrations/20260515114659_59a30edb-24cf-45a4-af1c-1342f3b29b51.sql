@@ -1,0 +1,1 @@
+ALTER TABLE public.status_settings ADD COLUMN IF NOT EXISTS icon text;

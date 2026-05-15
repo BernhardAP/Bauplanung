@@ -8,10 +8,22 @@ export type StatusMetaRow = {
   label: string;
   sort_order: number;
   color: string | null;
+  icon: string | null;
+};
+
+const DEFAULT_ICONS: Record<string, string> = {
+  open: 'CircleDashed',
+  in_progress: 'Loader2',
+  waiting: 'Clock',
+  question: 'HelpCircle',
+  blocked: 'Ban',
+  done: 'CheckCircle2',
 };
 
 const DEFAULTS: Record<string, StatusMetaRow> = Object.fromEntries(
-  STATUS_ORDER.map((s, i) => [s, { status: s, label: STATUS_LABEL[s], sort_order: i, color: null }]),
+  STATUS_ORDER.map((s, i) => [s, {
+    status: s, label: STATUS_LABEL[s], sort_order: i, color: null, icon: DEFAULT_ICONS[s] ?? null,
+  }]),
 );
 
 export async function fetchStatusSettings(): Promise<Record<string, StatusMetaRow>> {
