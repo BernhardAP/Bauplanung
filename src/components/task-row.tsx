@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip, ExternalLink } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip, ExternalLink, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { StatusIcon } from '@/lib/status-icon';
 import { CompanyBadge } from '@/components/company-badge';
@@ -22,6 +22,7 @@ interface Props {
   onCycleStatus: () => void;
   onIndent: () => void;
   onOutdent: () => void;
+  onAddSubtask: () => void;
 }
 
 function fmtDate(s: string | null) {
@@ -36,7 +37,7 @@ function fmtRange(start: string | null, end: string | null) {
 
 export function TaskRow({
   task, company, expanded, hasChildren = false, childrenCollapsed = false, attachmentCount = 0,
-  onToggleExpand, onToggleChildren, onEdit, onCycleStatus, onIndent, onOutdent,
+  onToggleExpand, onToggleChildren, onEdit, onCycleStatus, onIndent, onOutdent, onAddSubtask,
 }: Props) {
   const x = useMotionValue(0);
   const bg = useTransform(x, [-120, -40, 0, 40, 120],
@@ -200,12 +201,20 @@ export function TaskRow({
                   </ul>
                 </div>
               )}
-              <button
-                onClick={onEdit}
-                className="mt-1 inline-flex items-center gap-1 text-xs px-2 py-1 rounded border bg-background hover:bg-accent"
-              >
-                <Pencil className="h-3.5 w-3.5" /> Bearbeiten
-              </button>
+              <div className="mt-1 flex items-center gap-2">
+                <button
+                  onClick={onEdit}
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border bg-background hover:bg-accent"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Bearbeiten
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onAddSubtask(); }}
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border bg-background hover:bg-accent"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Unteraufgabe
+                </button>
+              </div>
             </div>
           )}
         </div>
