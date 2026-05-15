@@ -65,7 +65,7 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
   });
 
   const addLink = useMutation({
-    mutationFn: async (item: { name: string; webUrl: string; mimeType: string | null }) => {
+    mutationFn: async (item: { name: string; webUrl: string; mimeType: string | null; kind?: 'link' | 'email' }) => {
       if (!task) return;
       const { data, error } = await supabase.from('attachments').insert({
         task_id: task.id,
@@ -73,7 +73,7 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
         url: item.webUrl,
         storage_path: null,
         mime_type: item.mimeType,
-        kind: 'link',
+        kind: item.kind ?? 'link',
       }).select('id').single();
       if (error) throw error;
       const taskId = task.id;
