@@ -104,6 +104,27 @@ function TasksPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   });
 
+  async function handleAddSubtask(parent: Task) {
+    const maxOrder = tasks.reduce(
+      (m, t) => (t.parent_id === parent.id ? Math.max(m, t.sort_order) : m),
+      0,
+    );
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        title: '',
+        parent_id: parent.id,
+        depth: parent.depth + 1,
+        sort_order: maxOrder + 1000,
+      })
+      .select('id')
+      .single();
+    if (error) { toast.error(error.message); return; }
+    setCollapsedParents((s) => { const n = new Set(s); n.delete(parent.id); return n; });
+    qc.invalidateQueries({ queryKey: ['tasks'] });
+    if (data?.id) setEditTaskId(data.id);
+  }
+
   function handleIndent(task: Task) {
     const sameParent = tasks.filter((t) => t.parent_id === task.parent_id).sort((a, b) => a.sort_order - b.sort_order);
     const idx = sameParent.findIndex((t) => t.id === task.id);
