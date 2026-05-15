@@ -166,20 +166,16 @@ function TasksPage() {
       (m, t) => (t.parent_id === newParentId ? Math.max(m, t.sort_order) : m),
       0,
     );
-    const updates: Promise<unknown>[] = [];
-    updates.push(
-      supabase.from('tasks').update({
-        parent_id: newParentId,
-        depth: newDepth,
-        sort_order: maxOrder + 1000,
-      }).eq('id', draggedId),
-    );
+    const { error: e1 } = await supabase.from('tasks').update({
+      parent_id: newParentId,
+      depth: newDepth,
+      sort_order: maxOrder + 1000,
+    }).eq('id', draggedId);
+    if (e1) { toast.error(e1.message); return; }
     for (const d of descendants) {
-      updates.push(supabase.from('tasks').update({ depth: d.depth + depthDelta }).eq('id', d.id));
+      const { error: e2 } = await supabase.from('tasks').update({ depth: d.depth + depthDelta }).eq('id', d.id);
+      if (e2) { toast.error(e2.message); return; }
     }
-    const results = await Promise.all(updates);
-    const err = (results as { error?: { message: string } }[]).find((r) => r?.error);
-    if (err?.error) { toast.error(err.error.message); return; }
     setCollapsedParents((s) => { const n = new Set(s); n.delete(newParentId); return n; });
     qc.invalidateQueries({ queryKey: ['tasks'] });
     toast.success(`Verschoben unter „${newParent.title || 'Aufgabe'}"`);
