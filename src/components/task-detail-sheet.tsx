@@ -140,7 +140,12 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
               <SelectContent>
                 <SelectItem value="none">— keines —</SelectItem>
                 {companies.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.kuerzel} · {c.name}</SelectItem>
+                  <SelectItem key={c.id} value={c.id}>
+                    <span className="inline-flex items-center gap-2">
+                      <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: c.color ?? '#64748b' }} />
+                      {c.kuerzel} · {c.name}
+                    </span>
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

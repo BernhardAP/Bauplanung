@@ -63,7 +63,16 @@ function CompanyDetail() {
 
       <div className="p-4 space-y-3">
         <div><Label className="text-xs">Name</Label><Input value={draft.name} onChange={(e) => field('name', e.target.value)} onBlur={() => commit('name')} /></div>
-        <div><Label className="text-xs">Kürzel</Label><Input value={draft.kuerzel} maxLength={8} onChange={(e) => field('kuerzel', e.target.value)} onBlur={() => commit('kuerzel')} /></div>
+        <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+          <div><Label className="text-xs">Kürzel (2 Zeichen)</Label><Input value={draft.kuerzel} maxLength={4} onChange={(e) => field('kuerzel', e.target.value.toUpperCase())} onBlur={() => commit('kuerzel')} /></div>
+          <div>
+            <Label className="text-xs">Farbe</Label>
+            <div className="flex items-center gap-2">
+              <Input type="color" className="h-9 w-12 p-1" value={draft.color ?? '#64748b'} onChange={(e) => { field('color', e.target.value); save.mutate({ color: e.target.value }); }} />
+              <span className="inline-flex items-center justify-center rounded px-2 py-1 text-xs font-semibold uppercase" style={{ backgroundColor: draft.color ?? '#64748b', color: '#fff' }}>{draft.kuerzel}</span>
+            </div>
+          </div>
+        </div>
         <div><Label className="text-xs">Kontaktperson</Label><Input value={draft.kontaktperson ?? ''} onChange={(e) => field('kontaktperson', e.target.value || null)} onBlur={() => commit('kontaktperson')} /></div>
         <div><Label className="text-xs">Telefon</Label><Input type="tel" value={draft.telefon ?? ''} onChange={(e) => field('telefon', e.target.value || null)} onBlur={() => commit('telefon')} /></div>
         <div><Label className="text-xs">E-Mail</Label><Input type="email" value={draft.email ?? ''} onChange={(e) => field('email', e.target.value || null)} onBlur={() => commit('email')} /></div>

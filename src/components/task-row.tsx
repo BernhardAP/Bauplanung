@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Calendar, FileText } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip } from 'lucide-react';
 import { StatusIcon } from '@/lib/status-icon';
+import { CompanyBadge } from '@/components/company-badge';
 import type { Task, TaskStatus, Company } from '@/lib/types';
 import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
 
 interface Props {
   task: Task;
   company: Company | null;
-  onTap: () => void;
+  expanded: boolean;
+  attachmentCount?: number;
+  onToggleExpand: () => void;
+  onEdit: () => void;
   onCycleStatus: () => void;
   onIndent: () => void;
   onOutdent: () => void;
@@ -19,31 +23,28 @@ function fmtDate(s: string | null) {
   const [y, m, d] = s.split('-');
   return `${d}.${m}.${y.slice(2)}`;
 }
-
 function fmtRange(start: string | null, end: string | null) {
   if (start && end) return `${fmtDate(start)} – ${fmtDate(end)}`;
   return fmtDate(end ?? start);
 }
 
-export function TaskRow({ task, company, onTap, onCycleStatus, onIndent, onOutdent }: Props) {
+export function TaskRow({
+  task, company, expanded, attachmentCount = 0,
+  onToggleExpand, onEdit, onCycleStatus, onIndent, onOutdent,
+}: Props) {
   const x = useMotionValue(0);
   const bg = useTransform(x, [-120, -40, 0, 40, 120],
     ['oklch(0.85 0.05 250 / 0.4)', 'transparent', 'transparent', 'transparent', 'oklch(0.82 0.16 85 / 0.4)']);
   const leftHintOpacity = useTransform(x, [-120, -20, 0], [1, 0, 0]);
   const rightHintOpacity = useTransform(x, [0, 20, 120], [0, 0, 1]);
-
   const dateText = fmtRange(task.start_date, task.end_date);
+  const accentColor = company?.color ?? null;
 
   return (
     <div className="relative">
-      {/* swipe hint icons — only visible while swiping */}
       <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none text-muted-foreground">
-        <motion.span style={{ opacity: leftHintOpacity }}>
-          <ChevronLeft className="h-5 w-5" />
-        </motion.span>
-        <motion.span style={{ opacity: rightHintOpacity }}>
-          <ChevronRight className="h-5 w-5" />
-        </motion.span>
+        <motion.span style={{ opacity: leftHintOpacity }}><ChevronLeft className="h-5 w-5" /></motion.span>
+        <motion.span style={{ opacity: rightHintOpacity }}><ChevronRight className="h-5 w-5" /></motion.span>
       </div>
 
       <motion.div
@@ -57,87 +58,101 @@ export function TaskRow({ task, company, onTap, onCycleStatus, onIndent, onOutde
         }}
         className="border-b bg-card"
       >
-        {/* Mobile: compact single row */}
-        <div className="flex md:hidden items-center gap-2 py-2.5 pr-3" style={{ paddingLeft: 12 + task.depth * 16 }}>
-          <button
-            onClick={(e) => { e.stopPropagation(); onCycleStatus(); }}
-            className="p-1 -m-1 shrink-0"
-            aria-label="Status ändern"
-          >
-            <StatusIcon status={task.status} className="h-5 w-5" />
-          </button>
-          <button onClick={onTap} className="flex-1 text-left flex items-center gap-2 min-w-0">
-            <span className={`flex-1 truncate text-sm ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
-              {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
-            </span>
-            {company && (
-              <span className="shrink-0 text-[10px] uppercase tracking-wide rounded bg-secondary px-1.5 py-0.5 text-secondary-foreground">
-                {company.kuerzel}
-              </span>
-            )}
-            {dateText && (
-              <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">
-                {fmtDate(task.end_date ?? task.start_date)}
-              </span>
-            )}
-          </button>
-        </div>
+        {/* color accent stripe (depth-aware padding handled inside) */}
+        <div className="relative">
+          {accentColor && (
+            <span
+              className="absolute left-0 top-0 bottom-0 w-1"
+              style={{ backgroundColor: accentColor }}
+              aria-hidden
+            />
+          )}
 
-        {/* Desktop: expanded grid with more details */}
-        <div
-          className="hidden md:grid items-start gap-3 py-3 pr-4 text-sm"
-          style={{
-            paddingLeft: 16 + task.depth * 20,
-            gridTemplateColumns: 'auto minmax(0, 1fr) 160px 160px 80px',
-          }}
-        >
-          <button
-            onClick={(e) => { e.stopPropagation(); onCycleStatus(); }}
-            className="p-1 -m-1 shrink-0 mt-0.5"
-            aria-label="Status ändern"
-            title={STATUS_LABEL[task.status]}
-          >
-            <StatusIcon status={task.status} className="h-5 w-5" />
-          </button>
+          {/* Mobile compact row */}
+          <div className="flex md:hidden items-center gap-2 py-2.5 pr-2" style={{ paddingLeft: 12 + task.depth * 16 }}>
+            <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0" aria-label="Status">
+              <StatusIcon status={task.status} className="h-5 w-5" />
+            </button>
+            <button onClick={onToggleExpand} className="flex-1 text-left flex items-center gap-2 min-w-0">
+              <span className={`flex-1 truncate text-sm ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
+                {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
+              </span>
+              {company && <CompanyBadge company={company} />}
+              {dateText && <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">{fmtDate(task.end_date ?? task.start_date)}</span>}
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
 
-          <button onClick={onTap} className="text-left min-w-0">
-            <div className={`font-medium truncate ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
-              {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
-            </div>
-            {task.notes && (
-              <div className="mt-0.5 text-xs text-muted-foreground line-clamp-2 flex gap-1">
-                <FileText className="h-3 w-3 shrink-0 mt-0.5" />
-                <span>{task.notes}</span>
+          {/* Desktop expanded grid */}
+          <div
+            className="hidden md:grid items-start gap-3 py-3 pr-4 text-sm"
+            style={{
+              paddingLeft: 16 + task.depth * 20,
+              gridTemplateColumns: 'auto minmax(0, 1fr) 180px 160px 90px auto',
+            }}
+          >
+            <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0 mt-0.5" title={STATUS_LABEL[task.status]}>
+              <StatusIcon status={task.status} className="h-5 w-5" />
+            </button>
+            <button onClick={onToggleExpand} className="text-left min-w-0">
+              <div className={`font-medium truncate ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
+                {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
               </div>
-            )}
-          </button>
+              {task.notes && !expanded && (
+                <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1 flex gap-1">
+                  <FileText className="h-3 w-3 shrink-0 mt-0.5" /><span>{task.notes}</span>
+                </div>
+              )}
+            </button>
+            <div className="text-xs text-muted-foreground truncate">
+              {company ? <CompanyBadge company={company} showName /> : <span className="text-muted-foreground/60">—</span>}
+            </div>
+            <div className="text-xs text-muted-foreground tabular-nums truncate">
+              {dateText ? <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" /> {dateText}</span> : <span className="text-muted-foreground/60">—</span>}
+            </div>
+            <div className="text-xs text-muted-foreground">{STATUS_LABEL[task.status]}</div>
+            <button onClick={onEdit} className="p-1 -m-1 text-muted-foreground hover:text-foreground" aria-label="Bearbeiten">
+              <Pencil className="h-4 w-4" />
+            </button>
+          </div>
 
-          <button onClick={onTap} className="text-left text-xs text-muted-foreground truncate">
-            {company ? (
-              <>
-                <span className="inline-block rounded bg-secondary px-1.5 py-0.5 text-secondary-foreground uppercase tracking-wide mr-1">
-                  {company.kuerzel}
-                </span>
-                <span className="truncate">{company.name}</span>
-              </>
-            ) : (
-              <span className="text-muted-foreground/60">—</span>
-            )}
-          </button>
-
-          <button onClick={onTap} className="text-left text-xs text-muted-foreground tabular-nums truncate">
-            {dateText ? (
-              <span className="inline-flex items-center gap-1">
-                <Calendar className="h-3 w-3" /> {dateText}
-              </span>
-            ) : (
-              <span className="text-muted-foreground/60">—</span>
-            )}
-          </button>
-
-          <button onClick={onTap} className="text-left text-xs text-muted-foreground">
-            {STATUS_LABEL[task.status]}
-          </button>
+          {/* Inline expansion (mobile + desktop) */}
+          {expanded && (
+            <div
+              className="bg-muted/40 border-t pb-3 pt-2 pr-3 text-sm space-y-1.5"
+              style={{ paddingLeft: 16 + task.depth * 16 + 28 }}
+            >
+              {company && (
+                <div className="text-xs">
+                  <CompanyBadge company={company} showName />
+                  {company.kontaktperson && <span className="text-muted-foreground"> · {company.kontaktperson}</span>}
+                </div>
+              )}
+              {dateText && (
+                <div className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                  <Calendar className="h-3 w-3" /> {dateText}
+                </div>
+              )}
+              <div className="text-xs text-muted-foreground">Status: {STATUS_LABEL[task.status]}</div>
+              {task.notes && (
+                <div className="text-xs whitespace-pre-wrap text-foreground/80 flex gap-1">
+                  <FileText className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground" />
+                  <span>{task.notes}</span>
+                </div>
+              )}
+              {attachmentCount > 0 && (
+                <div className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                  <Paperclip className="h-3 w-3" /> {attachmentCount} Anhang{attachmentCount === 1 ? '' : 'e'}
+                </div>
+              )}
+              <button
+                onClick={onEdit}
+                className="mt-1 inline-flex items-center gap-1 text-xs px-2 py-1 rounded border bg-background hover:bg-accent"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Bearbeiten
+              </button>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
@@ -151,9 +166,7 @@ export function NewTaskRow({ depth = 0, onCreate }: { depth?: number; onCreate: 
       <input
         value={val}
         onChange={(e) => setVal(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && val.trim()) { onCreate(val.trim()); setVal(''); }
-        }}
+        onKeyDown={(e) => { if (e.key === 'Enter' && val.trim()) { onCreate(val.trim()); setVal(''); } }}
         placeholder="+ Neue Aufgabe…"
         className="w-full bg-transparent py-2.5 md:py-3 pr-3 text-sm outline-none placeholder:text-muted-foreground"
         style={{ paddingLeft: 12 + depth * 16 + 28 }}
