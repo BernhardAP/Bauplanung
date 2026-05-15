@@ -48,6 +48,7 @@ const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 
 const WD = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
 function TimelinePage() {
+  const statusMeta = useStatusMeta();
   const { data: tasks = [] } = useQuery({ queryKey: ['tasks'], queryFn: fetchTasks });
   const { data: companies = [] } = useQuery({ queryKey: ['companies'], queryFn: fetchCompanies });
   const companyById = useMemo(() => Object.fromEntries(companies.map((c) => [c.id, c])), [companies]);

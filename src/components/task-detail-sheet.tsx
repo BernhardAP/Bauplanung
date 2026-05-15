@@ -26,6 +26,7 @@ interface Props {
 }
 
 export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
+  const statusMeta = useStatusMeta();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Task | null>(null);
   const [extraCc, setExtraCc] = useState<string[]>([]);
