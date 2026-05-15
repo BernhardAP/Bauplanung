@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { BottomNav } from "@/components/bottom-nav";
+import { AuthGate } from "@/components/auth-gate";
 
 import appCss from "../styles.css?url";
 
