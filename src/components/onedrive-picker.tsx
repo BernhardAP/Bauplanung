@@ -51,7 +51,7 @@ export function OnedrivePicker({ open, onOpenChange, onPick }: Props) {
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Dateien suchen… (leer = zuletzt verwendet)"
+            placeholder="In Privat/Haus/Leiwen suchen…"
             className="pl-8"
           />
         </div>

@@ -57,6 +57,10 @@ function mapItem(it: GraphItem): OneDriveItem {
 
 const select = '$select=id,name,webUrl,file,folder,lastModifiedDateTime,parentReference';
 
+// Beschränkt OneDrive-Zugriff auf diesen Ordner
+const SCOPE_FOLDER = 'Privat/Haus/Leiwen';
+const SCOPE_BASE = `/me/drive/root:/${SCOPE_FOLDER.split('/').map(encodeURIComponent).join('/')}`;
+
 export const searchOnedrive = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) =>
     z.object({ query: z.string().max(200).optional() }).parse(input ?? {}),
@@ -64,8 +68,8 @@ export const searchOnedrive = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const q = data.query?.trim();
     const path = q
-      ? `/me/drive/root/search(q='${encodeURIComponent(q)}')?${select}&$top=25`
-      : `/me/drive/recent?$top=25`;
+      ? `${SCOPE_BASE}:/search(q='${encodeURIComponent(q)}')?${select}&$top=50`
+      : `${SCOPE_BASE}:/children?${select}&$top=100&$orderby=name`;
     const json = await gatewayFetch(path);
     const items: OneDriveItem[] = (json.value ?? []).map(mapItem);
     return { items };
@@ -76,10 +80,9 @@ export const browseOnedrive = createServerFn({ method: 'POST' })
     z.object({ folderId: z.string().optional() }).parse(input ?? {}),
   )
   .handler(async ({ data }) => {
-    const base = data.folderId
-      ? `/me/drive/items/${encodeURIComponent(data.folderId)}/children`
-      : `/me/drive/root/children`;
-    const path = `${base}?${select}&$top=100&$orderby=name`;
+    const path = data.folderId
+      ? `/me/drive/items/${encodeURIComponent(data.folderId)}/children?${select}&$top=100&$orderby=name`
+      : `${SCOPE_BASE}:/children?${select}&$top=100&$orderby=name`;
     const json = await gatewayFetch(path);
     const items: OneDriveItem[] = (json.value ?? []).map(mapItem);
     return { items };
