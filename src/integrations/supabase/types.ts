@@ -14,7 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attachments: {
+        Row: {
+          created_at: string
+          filename: string
+          id: string
+          kind: Database["public"]["Enums"]["attachment_kind"]
+          mime_type: string | null
+          storage_path: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          filename: string
+          id?: string
+          kind?: Database["public"]["Enums"]["attachment_kind"]
+          mime_type?: string | null
+          storage_path: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          filename?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["attachment_kind"]
+          mime_type?: string | null
+          storage_path?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          adresse: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_default_cc: boolean
+          kontaktperson: string | null
+          kuerzel: string
+          name: string
+          notes: string | null
+          telefon: string | null
+          web: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_default_cc?: boolean
+          kontaktperson?: string | null
+          kuerzel: string
+          name: string
+          notes?: string | null
+          telefon?: string | null
+          web?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_default_cc?: boolean
+          kontaktperson?: string | null
+          kuerzel?: string
+          name?: string
+          notes?: string | null
+          telefon?: string | null
+          web?: string | null
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          depth: number
+          end_date: string | null
+          id: string
+          notes: string | null
+          parent_id: string | null
+          sort_order: number
+          start_date: string | null
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          depth?: number
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          parent_id?: string | null
+          sort_order?: number
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          depth?: number
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          parent_id?: string | null
+          sort_order?: number
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +159,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      attachment_kind: "document" | "email"
+      task_status:
+        | "open"
+        | "in_progress"
+        | "waiting"
+        | "done"
+        | "blocked"
+        | "question"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +293,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      attachment_kind: ["document", "email"],
+      task_status: [
+        "open",
+        "in_progress",
+        "waiting",
+        "done",
+        "blocked",
+        "question",
+      ],
+    },
   },
 } as const
