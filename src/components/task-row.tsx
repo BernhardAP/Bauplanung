@@ -104,15 +104,20 @@ export function TaskRow({
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0 mt-0.5" title={STATUS_LABEL[task.status]}>
               <StatusIcon status={task.status} className="h-5 w-5" />
             </button>
-            <button onClick={onToggleExpand} className="text-left min-w-0">
-              <div className={`font-medium truncate ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
-                {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
-              </div>
-              {task.notes && !expanded && (
-                <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1 flex gap-1">
-                  <FileText className="h-3 w-3 shrink-0 mt-0.5" /><span>{task.notes}</span>
-                </div>
+            <button onClick={onRowClick} className="text-left min-w-0 flex items-start gap-1.5">
+              {hasChildren && (
+                <ChevronRight className={`h-4 w-4 mt-0.5 shrink-0 text-muted-foreground transition-transform ${childrenCollapsed ? '' : 'rotate-90'}`} />
               )}
+              <div className="min-w-0 flex-1">
+                <div className={`font-medium truncate ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
+                  {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
+                </div>
+                {task.notes && !expanded && (
+                  <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1 flex gap-1">
+                    <FileText className="h-3 w-3 shrink-0 mt-0.5" /><span>{task.notes}</span>
+                  </div>
+                )}
+              </div>
             </button>
             <div className="text-xs text-muted-foreground truncate">
               {company ? <CompanyBadge company={company} showName /> : <span className="text-muted-foreground/60">—</span>}
