@@ -72,8 +72,22 @@ function TasksPage() {
     <div>
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
         <div className="px-4 py-3">
-          <h1 className="text-lg font-semibold">Bauplanung Leiwen</h1>
-          <p className="text-xs text-muted-foreground">{ordered.length} Aufgaben · Swipe ⇆ für Hierarchie</p>
+          <h1 className="text-lg md:text-xl font-semibold">Bauplanung Leiwen</h1>
+          <p className="text-xs text-muted-foreground">
+            {ordered.length} Aufgaben · <span className="md:hidden">Swipe ⇆ für Hierarchie</span>
+            <span className="hidden md:inline">Tippen zum Bearbeiten · Swipe ⇆ für Hierarchie</span>
+          </p>
+        </div>
+        {/* Desktop column headers */}
+        <div
+          className="hidden md:grid items-center gap-3 px-4 pb-2 text-[10px] uppercase tracking-wide text-muted-foreground"
+          style={{ gridTemplateColumns: 'auto minmax(0, 1fr) 160px 160px 80px', paddingLeft: 16 }}
+        >
+          <span className="w-5" />
+          <span>Aufgabe</span>
+          <span>Unternehmen</span>
+          <span>Zeitraum</span>
+          <span>Status</span>
         </div>
       </header>
 
