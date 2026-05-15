@@ -10,9 +10,10 @@ import { StatusIcon } from '@/lib/status-icon';
 import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
 import { toast } from 'sonner';
-import { Search, X } from 'lucide-react';
+import { Search, X, LogOut } from 'lucide-react';
 import { undoStore } from '@/lib/undo-store';
 import { UndoButton } from '@/components/undo-button';
+import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -335,7 +336,12 @@ function TasksPage() {
               <span className="hidden md:inline">Tippen klappt auf · ✏️ bearbeiten · Swipe ⇆ Hierarchie</span>
             </p>
           </div>
-          <UndoButton />
+          <div className="flex items-center gap-1">
+            <UndoButton />
+            <Button variant="ghost" size="icon" title="Abmelden" onClick={() => supabase.auth.signOut()}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Filter bar */}
