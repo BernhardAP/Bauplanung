@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Phone, Mail, Link2, Trash2, X, ExternalLink } from 'lucide-react';
+import { Phone, Mail, Link2, Trash2, X, ExternalLink, Inbox } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAttachments, fetchCompanies } from '@/lib/queries';
@@ -14,6 +14,7 @@ import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_LABEL, STATUS_ORDER } from '@/lib/types';
 import { StatusIcon } from '@/lib/status-icon';
 import { OnedrivePicker } from '@/components/onedrive-picker';
+import { OutlookPicker } from '@/components/outlook-picker';
 import { toast } from 'sonner';
 import { undoStore } from '@/lib/undo-store';
 
@@ -28,6 +29,7 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
   const [draft, setDraft] = useState<Task | null>(null);
   const [extraCc, setExtraCc] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [outlookOpen, setOutlookOpen] = useState(false);
 
   useEffect(() => { setDraft(task); setExtraCc([]); }, [task?.id, open]);
 
@@ -63,7 +65,7 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
   });
 
   const addLink = useMutation({
-    mutationFn: async (item: { name: string; webUrl: string; mimeType: string | null }) => {
+    mutationFn: async (item: { name: string; webUrl: string; mimeType: string | null; kind?: 'link' | 'email' }) => {
       if (!task) return;
       const { data, error } = await supabase.from('attachments').insert({
         task_id: task.id,
@@ -71,7 +73,7 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
         url: item.webUrl,
         storage_path: null,
         mime_type: item.mimeType,
-        kind: 'link',
+        kind: item.kind ?? 'link',
       }).select('id').single();
       if (error) throw error;
       const taskId = task.id;
@@ -263,15 +265,26 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
                 <li className="text-xs text-muted-foreground">Noch keine Dokumente verknüpft.</li>
               )}
             </ul>
-            <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => setPickerOpen(true)}>
-              <Link2 className="h-4 w-4 mr-1" /> OneDrive-Datei verknüpfen
-            </Button>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
+                <Link2 className="h-4 w-4 mr-1" /> OneDrive-Datei verknüpfen
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => setOutlookOpen(true)}>
+                <Inbox className="h-4 w-4 mr-1" /> E-Mail aus Outlook anhängen
+              </Button>
+            </div>
           </div>
 
           <OnedrivePicker
             open={pickerOpen}
             onOpenChange={setPickerOpen}
             onPick={(item) => addLink.mutateAsync({ name: item.name, webUrl: item.webUrl, mimeType: item.mimeType })}
+          />
+
+          <OutlookPicker
+            open={outlookOpen}
+            onOpenChange={setOutlookOpen}
+            onSaved={(item) => addLink.mutateAsync({ name: item.name, webUrl: item.webUrl, mimeType: item.mimeType, kind: 'email' })}
           />
 
           {company && (
