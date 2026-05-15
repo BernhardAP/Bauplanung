@@ -16,6 +16,8 @@ interface Props {
   hasChildren?: boolean;
   childrenCollapsed?: boolean;
   attachmentCount?: number;
+  isDropTarget?: boolean;
+  dragLocked?: boolean;
   onToggleExpand: () => void;
   onToggleChildren?: () => void;
   onEdit: () => void;
@@ -23,6 +25,7 @@ interface Props {
   onIndent: () => void;
   onOutdent: () => void;
   onAddSubtask: () => void;
+  onLongPressStart?: (clientX: number, clientY: number) => void;
 }
 
 function fmtDate(s: string | null) {
