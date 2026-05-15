@@ -49,26 +49,28 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   });
 
-  const upload = useMutation({
-    mutationFn: async (file: File) => {
+  const addLink = useMutation({
+    mutationFn: async (item: { name: string; webUrl: string; mimeType: string | null }) => {
       if (!task) return;
-      const path = `${task.id}/${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from('attachments').upload(path, file);
-      if (error) throw error;
-      const ext = file.name.toLowerCase();
-      const kind = ext.endsWith('.msg') || ext.endsWith('.eml') ? 'email' : 'document';
-      const { error: e2 } = await supabase.from('attachments').insert({
-        task_id: task.id, filename: file.name, storage_path: path, mime_type: file.type || null, kind,
+      const { error } = await supabase.from('attachments').insert({
+        task_id: task.id,
+        filename: item.name,
+        url: item.webUrl,
+        storage_path: null,
+        mime_type: item.mimeType,
+        kind: 'link',
       });
-      if (e2) throw e2;
+      if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['attachments', task?.id] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
   const removeAttachment = useMutation({
-    mutationFn: async (a: { id: string; storage_path: string }) => {
-      await supabase.storage.from('attachments').remove([a.storage_path]);
+    mutationFn: async (a: { id: string; storage_path: string | null; kind: string }) => {
+      if (a.kind !== 'link' && a.storage_path) {
+        await supabase.storage.from('attachments').remove([a.storage_path]);
+      }
       await supabase.from('attachments').delete().eq('id', a.id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['attachments', task?.id] }),
