@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip, ExternalLink, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +16,8 @@ interface Props {
   hasChildren?: boolean;
   childrenCollapsed?: boolean;
   attachmentCount?: number;
+  isDropTarget?: boolean;
+  dragLocked?: boolean;
   onToggleExpand: () => void;
   onToggleChildren?: () => void;
   onEdit: () => void;
@@ -23,6 +25,7 @@ interface Props {
   onIndent: () => void;
   onOutdent: () => void;
   onAddSubtask: () => void;
+  onLongPressStart?: (clientX: number, clientY: number) => void;
 }
 
 function fmtDate(s: string | null) {
@@ -37,7 +40,9 @@ function fmtRange(start: string | null, end: string | null) {
 
 export function TaskRow({
   task, company, expanded, hasChildren = false, childrenCollapsed = false, attachmentCount = 0,
+  isDropTarget = false, dragLocked = false,
   onToggleExpand, onToggleChildren, onEdit, onCycleStatus, onIndent, onOutdent, onAddSubtask,
+  onLongPressStart,
 }: Props) {
   const x = useMotionValue(0);
   const bg = useTransform(x, [-120, -40, 0, 40, 120],
@@ -57,23 +62,54 @@ export function TaskRow({
     staleTime: 30_000,
   });
 
+  const pressTimer = useRef<number | null>(null);
+  const pressStart = useRef<{ x: number; y: number } | null>(null);
+  const pressFired = useRef(false);
+
+  const clearPress = () => {
+    if (pressTimer.current !== null) { window.clearTimeout(pressTimer.current); pressTimer.current = null; }
+    pressStart.current = null;
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    pressFired.current = false;
+    pressStart.current = { x: e.clientX, y: e.clientY };
+    pressTimer.current = window.setTimeout(() => {
+      pressFired.current = true;
+      if (navigator.vibrate) navigator.vibrate(30);
+      onLongPressStart?.(pressStart.current?.x ?? 0, pressStart.current?.y ?? 0);
+    }, 400);
+  };
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!pressStart.current || pressFired.current) return;
+    const dx = e.clientX - pressStart.current.x;
+    const dy = e.clientY - pressStart.current.y;
+    if (Math.hypot(dx, dy) > 8) clearPress();
+  };
+
   return (
-    <div className="relative">
+    <div className="relative" data-task-id={task.id}>
       <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none text-muted-foreground">
         <motion.span style={{ opacity: leftHintOpacity }}><ChevronLeft className="h-5 w-5" /></motion.span>
         <motion.span style={{ opacity: rightHintOpacity }}><ChevronRight className="h-5 w-5" /></motion.span>
       </div>
 
       <motion.div
-        drag="x"
+        drag={dragLocked ? false : 'x'}
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.4}
         style={{ x, backgroundColor: bg }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={clearPress}
+        onPointerCancel={clearPress}
         onDragEnd={(_, info) => {
+          clearPress();
           if (info.offset.x > 80) onIndent();
           else if (info.offset.x < -80) onOutdent();
         }}
-        className="border-b bg-card"
+        className={`border-b bg-card transition-shadow ${isDropTarget ? 'ring-2 ring-inset ring-primary bg-primary/5' : ''}`}
       >
         {/* color accent stripe (depth-aware padding handled inside) */}
         <div className="relative">

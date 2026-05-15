@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCompanies, fetchTasks, flattenTree } from '@/lib/queries';
@@ -124,6 +124,104 @@ function TasksPage() {
     qc.invalidateQueries({ queryKey: ['tasks'] });
     if (data?.id) setEditTaskId(data.id);
   }
+
+  // ----- Long-press drag-to-reparent -----
+  type DragState = { id: string; x: number; y: number; targetId: string | null };
+  const [dragState, setDragState] = useState<DragState | null>(null);
+  const dragStateRef = useRef<DragState | null>(null);
+  useEffect(() => { dragStateRef.current = dragState; }, [dragState]);
+
+  const childrenByParentId = useMemo(() => {
+    const m = new Map<string | null, Task[]>();
+    for (const t of tasks) {
+      const arr = m.get(t.parent_id) ?? [];
+      arr.push(t);
+      m.set(t.parent_id, arr);
+    }
+    return m;
+  }, [tasks]);
+
+  function collectDescendants(id: string): Task[] {
+    const out: Task[] = [];
+    const walk = (pid: string) => {
+      for (const c of childrenByParentId.get(pid) ?? []) { out.push(c); walk(c.id); }
+    };
+    walk(id);
+    return out;
+  }
+
+  async function handleReparent(draggedId: string, newParentId: string) {
+    const dragged = tasks.find((t) => t.id === draggedId);
+    const newParent = tasks.find((t) => t.id === newParentId);
+    if (!dragged || !newParent) return;
+    if (draggedId === newParentId) return;
+    const descendants = collectDescendants(draggedId);
+    if (descendants.some((d) => d.id === newParentId)) {
+      toast.error('Aufgabe kann nicht in eigene Unteraufgabe verschoben werden');
+      return;
+    }
+    const newDepth = newParent.depth + 1;
+    const depthDelta = newDepth - dragged.depth;
+    const maxOrder = tasks.reduce(
+      (m, t) => (t.parent_id === newParentId ? Math.max(m, t.sort_order) : m),
+      0,
+    );
+    const { error: e1 } = await supabase.from('tasks').update({
+      parent_id: newParentId,
+      depth: newDepth,
+      sort_order: maxOrder + 1000,
+    }).eq('id', draggedId);
+    if (e1) { toast.error(e1.message); return; }
+    for (const d of descendants) {
+      const { error: e2 } = await supabase.from('tasks').update({ depth: d.depth + depthDelta }).eq('id', d.id);
+      if (e2) { toast.error(e2.message); return; }
+    }
+    setCollapsedParents((s) => { const n = new Set(s); n.delete(newParentId); return n; });
+    qc.invalidateQueries({ queryKey: ['tasks'] });
+    toast.success(`Verschoben unter „${newParent.title || 'Aufgabe'}"`);
+  }
+
+  function handleLongPressStart(taskId: string, x: number, y: number) {
+    setDragState({ id: taskId, x, y, targetId: null });
+  }
+
+  useEffect(() => {
+    if (!dragState) return;
+    const findTarget = (clientX: number, clientY: number): string | null => {
+      const el = document.elementFromPoint(clientX, clientY);
+      const row = el?.closest('[data-task-id]') as HTMLElement | null;
+      const id = row?.getAttribute('data-task-id') ?? null;
+      if (!id || id === dragState.id) return null;
+      // forbid descendants
+      const descIds = new Set(collectDescendants(dragState.id).map((d) => d.id));
+      if (descIds.has(id)) return null;
+      return id;
+    };
+    const onMove = (e: PointerEvent) => {
+      e.preventDefault();
+      const targetId = findTarget(e.clientX, e.clientY);
+      setDragState((s) => (s ? { ...s, x: e.clientX, y: e.clientY, targetId } : s));
+    };
+    const onUp = () => {
+      const s = dragStateRef.current;
+      if (s?.targetId) handleReparent(s.id, s.targetId);
+      setDragState(null);
+    };
+    window.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    const prevTouchAction = document.body.style.touchAction;
+    document.body.style.touchAction = 'none';
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      document.body.style.touchAction = prevTouchAction;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragState?.id]);
+
+  const draggedTask = dragState ? tasks.find((t) => t.id === dragState.id) ?? null : null;
 
   function handleIndent(task: Task) {
     const sameParent = tasks.filter((t) => t.parent_id === task.parent_id).sort((a, b) => a.sort_order - b.sort_order);
@@ -254,6 +352,8 @@ function TasksPage() {
               hasChildren={(childrenByParent.get(t.id) ?? 0) > 0}
               childrenCollapsed={collapsedParents.has(t.id)}
               attachmentCount={attCount.get(t.id) ?? 0}
+              isDropTarget={dragState?.targetId === t.id}
+              dragLocked={!!dragState}
               onToggleExpand={() => toggleExpand(t.id)}
               onToggleChildren={() => toggleChildren(t.id)}
               onEdit={() => setEditTaskId(t.id)}
@@ -261,6 +361,7 @@ function TasksPage() {
               onIndent={() => handleIndent(t)}
               onOutdent={() => handleOutdent(t)}
               onAddSubtask={() => handleAddSubtask(t)}
+              onLongPressStart={(x, y) => handleLongPressStart(t.id, x, y)}
             />
           </li>
         ))}
@@ -277,6 +378,22 @@ function TasksPage() {
         open={!!editTaskId}
         onOpenChange={(o) => { if (!o) setEditTaskId(null); }}
       />
+
+      {dragState && draggedTask && (
+        <div
+          className="pointer-events-none fixed z-50 px-3 py-2 rounded-md border bg-card shadow-lg text-sm max-w-[80vw] truncate"
+          style={{
+            left: dragState.x,
+            top: dragState.y,
+            transform: 'translate(-50%, -120%)',
+          }}
+        >
+          {draggedTask.title || '(ohne Titel)'}
+          {dragState.targetId && (
+            <span className="ml-2 text-xs text-primary">→ Unteraufgabe</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
