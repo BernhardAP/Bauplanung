@@ -10,8 +10,11 @@ interface Props {
   task: Task;
   company: Company | null;
   expanded: boolean;
+  hasChildren?: boolean;
+  childrenCollapsed?: boolean;
   attachmentCount?: number;
   onToggleExpand: () => void;
+  onToggleChildren?: () => void;
   onEdit: () => void;
   onCycleStatus: () => void;
   onIndent: () => void;
@@ -29,8 +32,8 @@ function fmtRange(start: string | null, end: string | null) {
 }
 
 export function TaskRow({
-  task, company, expanded, attachmentCount = 0,
-  onToggleExpand, onEdit, onCycleStatus, onIndent, onOutdent,
+  task, company, expanded, hasChildren = false, childrenCollapsed = false, attachmentCount = 0,
+  onToggleExpand, onToggleChildren, onEdit, onCycleStatus, onIndent, onOutdent,
 }: Props) {
   const x = useMotionValue(0);
   const bg = useTransform(x, [-120, -40, 0, 40, 120],
@@ -39,6 +42,9 @@ export function TaskRow({
   const rightHintOpacity = useTransform(x, [0, 20, 120], [0, 0, 1]);
   const dateText = fmtRange(task.start_date, task.end_date);
   const accentColor = company?.color ?? null;
+  // For parents: clicking the row toggles children visibility.
+  // For leaves: clicking toggles inline detail view.
+  const onRowClick = hasChildren ? (onToggleChildren ?? onToggleExpand) : onToggleExpand;
 
   return (
     <div className="relative">
@@ -73,13 +79,17 @@ export function TaskRow({
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0" aria-label="Status">
               <StatusIcon status={task.status} className="h-5 w-5" />
             </button>
-            <button onClick={onToggleExpand} className="flex-1 text-left flex items-center gap-2 min-w-0">
+            <button onClick={onRowClick} className="flex-1 text-left flex items-center gap-2 min-w-0">
               <span className={`flex-1 truncate text-sm ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
                 {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
               </span>
               {company && <CompanyBadge company={company} />}
               {dateText && <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">{fmtDate(task.end_date ?? task.start_date)}</span>}
-              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} />
+              {hasChildren ? (
+                <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${childrenCollapsed ? '' : 'rotate-90'}`} />
+              ) : (
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} />
+              )}
             </button>
           </div>
 
@@ -94,15 +104,20 @@ export function TaskRow({
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0 mt-0.5" title={STATUS_LABEL[task.status]}>
               <StatusIcon status={task.status} className="h-5 w-5" />
             </button>
-            <button onClick={onToggleExpand} className="text-left min-w-0">
-              <div className={`font-medium truncate ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
-                {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
-              </div>
-              {task.notes && !expanded && (
-                <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1 flex gap-1">
-                  <FileText className="h-3 w-3 shrink-0 mt-0.5" /><span>{task.notes}</span>
-                </div>
+            <button onClick={onRowClick} className="text-left min-w-0 flex items-start gap-1.5">
+              {hasChildren && (
+                <ChevronRight className={`h-4 w-4 mt-0.5 shrink-0 text-muted-foreground transition-transform ${childrenCollapsed ? '' : 'rotate-90'}`} />
               )}
+              <div className="min-w-0 flex-1">
+                <div className={`font-medium truncate ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
+                  {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
+                </div>
+                {task.notes && !expanded && (
+                  <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1 flex gap-1">
+                    <FileText className="h-3 w-3 shrink-0 mt-0.5" /><span>{task.notes}</span>
+                  </div>
+                )}
+              </div>
             </button>
             <div className="text-xs text-muted-foreground truncate">
               {company ? <CompanyBadge company={company} showName /> : <span className="text-muted-foreground/60">—</span>}
