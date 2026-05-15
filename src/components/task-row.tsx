@@ -10,8 +10,11 @@ interface Props {
   task: Task;
   company: Company | null;
   expanded: boolean;
+  hasChildren?: boolean;
+  childrenCollapsed?: boolean;
   attachmentCount?: number;
   onToggleExpand: () => void;
+  onToggleChildren?: () => void;
   onEdit: () => void;
   onCycleStatus: () => void;
   onIndent: () => void;
