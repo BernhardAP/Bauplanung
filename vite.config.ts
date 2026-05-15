@@ -12,4 +12,9 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  vite: {
+    optimizeDeps: {
+      include: ["@tanstack/router-core", "@tanstack/router-core/ssr/client", "seroval"],
+    },
+  },
 });
