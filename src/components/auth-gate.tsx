@@ -101,10 +101,10 @@ function LoginScreen() {
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-2xl border p-6 shadow-sm">
         <div className="flex items-center gap-2">
           <Lock className="h-4 w-4" />
-          <h1 className="text-lg font-semibold">Bauplanung</h1>
+          <h1 className="text-lg font-semibold">Anmeldung</h1>
         </div>
         <p className="text-xs text-muted-foreground">
-          Zugriff nur für Gisela und Bernhard. Beim ersten Mal bitte „Konto anlegen" wählen und ein Passwort vergeben.
+          Bitte mit Zugangsdaten anmelden.
         </p>
 
         <div className="flex gap-1 text-sm">
