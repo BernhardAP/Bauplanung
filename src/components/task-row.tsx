@@ -8,6 +8,7 @@ import { fetchAttachments } from '@/lib/queries';
 import { supabase } from '@/integrations/supabase/client';
 import type { Task, TaskStatus, Company } from '@/lib/types';
 import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
+import { useStatusMeta } from '@/lib/use-status-meta';
 
 interface Props {
   task: Task;

@@ -28,6 +28,7 @@ export const Route = createFileRoute('/')({
 });
 
 function TasksPage() {
+  const statusMeta = useStatusMeta();
   const qc = useQueryClient();
   const { data: tasks = [] } = useQuery({ queryKey: ['tasks'], queryFn: fetchTasks });
   const { data: companies = [] } = useQuery({ queryKey: ['companies'], queryFn: fetchCompanies });
