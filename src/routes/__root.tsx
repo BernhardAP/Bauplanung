@@ -86,10 +86,12 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen pb-20 max-w-md md:max-w-5xl mx-auto">
-        <Outlet />
-      </div>
-      <BottomNav />
+      <AuthGate>
+        <div className="min-h-screen pb-20 max-w-md md:max-w-5xl mx-auto">
+          <Outlet />
+        </div>
+        <BottomNav />
+      </AuthGate>
       <Toaster position="top-center" />
     </QueryClientProvider>
   );
