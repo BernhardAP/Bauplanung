@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,13 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Phone, Mail, Paperclip, Trash2, Upload, X } from 'lucide-react';
+import { Phone, Mail, Link2, Trash2, X, ExternalLink } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAttachments, fetchCompanies } from '@/lib/queries';
-import type { Task, TaskStatus, Company } from '@/lib/types';
+import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_LABEL, STATUS_ORDER } from '@/lib/types';
 import { StatusIcon } from '@/lib/status-icon';
+import { OnedrivePicker } from '@/components/onedrive-picker';
 import { toast } from 'sonner';
 
 interface Props {
@@ -25,7 +26,7 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Task | null>(null);
   const [extraCc, setExtraCc] = useState<string[]>([]);
-  const fileInput = useRef<HTMLInputElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => { setDraft(task); setExtraCc([]); }, [task?.id, open]);
 
@@ -172,14 +173,19 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
           </div>
 
           <div>
-            <Label className="text-xs flex items-center gap-1"><Paperclip className="h-3 w-3" /> Anhänge</Label>
+            <Label className="text-xs flex items-center gap-1"><Link2 className="h-3 w-3" /> Dokumente (OneDrive)</Label>
             <ul className="mt-1 space-y-1">
               {attachments.map((a) => {
-                const url = supabase.storage.from('attachments').getPublicUrl(a.storage_path).data.publicUrl;
+                const href = a.kind === 'link'
+                  ? a.url ?? '#'
+                  : (a.storage_path ? supabase.storage.from('attachments').getPublicUrl(a.storage_path).data.publicUrl : '#');
+                const icon = a.kind === 'link' ? '🔗' : a.kind === 'email' ? '✉️' : '📎';
                 return (
                   <li key={a.id} className="flex items-center gap-2 text-sm">
-                    <a href={url} target="_blank" rel="noreferrer" className="flex-1 truncate underline-offset-2 hover:underline">
-                      {a.kind === 'email' ? '✉️' : '📎'} {a.filename}
+                    <a href={href} target="_blank" rel="noreferrer" className="flex-1 truncate inline-flex items-center gap-1 underline-offset-2 hover:underline">
+                      <span>{icon}</span>
+                      <span className="truncate">{a.filename}</span>
+                      <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground" />
                     </a>
                     <button onClick={() => removeAttachment.mutate(a)} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="h-4 w-4" />
@@ -187,14 +193,20 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
                   </li>
                 );
               })}
+              {attachments.length === 0 && (
+                <li className="text-xs text-muted-foreground">Noch keine Dokumente verknüpft.</li>
+              )}
             </ul>
-            <input ref={fileInput} type="file" hidden onChange={(e) => {
-              const f = e.target.files?.[0]; if (f) upload.mutate(f); e.target.value = '';
-            }} />
-            <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => fileInput.current?.click()}>
-              <Upload className="h-4 w-4 mr-1" /> Datei hinzufügen
+            <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => setPickerOpen(true)}>
+              <Link2 className="h-4 w-4 mr-1" /> OneDrive-Datei verknüpfen
             </Button>
           </div>
+
+          <OnedrivePicker
+            open={pickerOpen}
+            onOpenChange={setPickerOpen}
+            onPick={(item) => addLink.mutateAsync({ name: item.name, webUrl: item.webUrl, mimeType: item.mimeType })}
+          />
 
           {company && (
             <div className="space-y-2 border-t pt-3">
