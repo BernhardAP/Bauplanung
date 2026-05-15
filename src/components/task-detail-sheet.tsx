@@ -44,8 +44,20 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
   const save = useMutation({
     mutationFn: async (patch: Partial<Task>) => {
       if (!task) return;
+      // capture inverse from the (server-truth) task prop
+      const prev: Partial<Task> = {};
+      for (const k of Object.keys(patch) as (keyof Task)[]) {
+        (prev as Record<string, unknown>)[k] = task[k];
+      }
       const { error } = await supabase.from('tasks').update(patch).eq('id', task.id);
       if (error) throw error;
+      const taskId = task.id;
+      const label = `Bearbeitet: „${task.title || 'Aufgabe'}"`;
+      undoStore.push(label, async () => {
+        const { error: e } = await supabase.from('tasks').update(prev).eq('id', taskId);
+        if (e) throw e;
+        qc.invalidateQueries({ queryKey: ['tasks'] });
+      });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   });
@@ -53,35 +65,86 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
   const addLink = useMutation({
     mutationFn: async (item: { name: string; webUrl: string; mimeType: string | null }) => {
       if (!task) return;
-      const { error } = await supabase.from('attachments').insert({
+      const { data, error } = await supabase.from('attachments').insert({
         task_id: task.id,
         filename: item.name,
         url: item.webUrl,
         storage_path: null,
         mime_type: item.mimeType,
         kind: 'link',
-      });
+      }).select('id').single();
       if (error) throw error;
+      const taskId = task.id;
+      const newId = data?.id;
+      if (newId) {
+        undoStore.push(`Verknüpfung „${item.name}" hinzugefügt`, async () => {
+          const { error: e } = await supabase.from('attachments').delete().eq('id', newId);
+          if (e) throw e;
+          qc.invalidateQueries({ queryKey: ['attachments', taskId] });
+          qc.invalidateQueries({ queryKey: ['attachments-all'] });
+        });
+      }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['attachments', task?.id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attachments', task?.id] });
+      qc.invalidateQueries({ queryKey: ['attachments-all'] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const removeAttachment = useMutation({
-    mutationFn: async (a: { id: string; storage_path: string | null; kind: string }) => {
+    mutationFn: async (a: { id: string; storage_path: string | null; kind: string; filename: string; url: string | null; mime_type: string | null }) => {
       if (a.kind !== 'link' && a.storage_path) {
         await supabase.storage.from('attachments').remove([a.storage_path]);
       }
       await supabase.from('attachments').delete().eq('id', a.id);
+      const taskId = task?.id;
+      if (taskId) {
+        const snapshot = { ...a, task_id: taskId };
+        undoStore.push(`Dokument „${a.filename}" gelöscht`, async () => {
+          const { error } = await supabase.from('attachments').insert({
+            id: snapshot.id,
+            task_id: snapshot.task_id,
+            filename: snapshot.filename,
+            url: snapshot.url,
+            storage_path: snapshot.storage_path,
+            mime_type: snapshot.mime_type,
+            kind: snapshot.kind as 'document' | 'email' | 'link',
+          });
+          if (error) throw error;
+          qc.invalidateQueries({ queryKey: ['attachments', taskId] });
+          qc.invalidateQueries({ queryKey: ['attachments-all'] });
+        });
+      }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['attachments', task?.id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attachments', task?.id] });
+      qc.invalidateQueries({ queryKey: ['attachments-all'] });
+    },
   });
 
   const deleteTask = useMutation({
     mutationFn: async () => {
       if (!task) return;
+      const snapshot = { ...task };
       const { error } = await supabase.from('tasks').delete().eq('id', task.id);
       if (error) throw error;
+      undoStore.push(`Aufgabe „${snapshot.title || 'ohne Titel'}" gelöscht`, async () => {
+        const { error: e } = await supabase.from('tasks').insert({
+          id: snapshot.id,
+          title: snapshot.title,
+          parent_id: snapshot.parent_id,
+          depth: snapshot.depth,
+          sort_order: snapshot.sort_order,
+          status: snapshot.status,
+          company_id: snapshot.company_id,
+          start_date: snapshot.start_date,
+          end_date: snapshot.end_date,
+          notes: snapshot.notes,
+        });
+        if (e) throw e;
+        qc.invalidateQueries({ queryKey: ['tasks'] });
+      });
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tasks'] }); onOpenChange(false); },
   });
