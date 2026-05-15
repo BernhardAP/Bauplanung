@@ -14,6 +14,7 @@ import { Search, X, LogOut } from 'lucide-react';
 import { undoStore } from '@/lib/undo-store';
 import { UndoButton } from '@/components/undo-button';
 import { Button } from '@/components/ui/button';
+import { ChangePasswordDialog } from '@/components/change-password-dialog';
 
 export const Route = createFileRoute('/')({
   head: () => ({
