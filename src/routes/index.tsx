@@ -352,6 +352,8 @@ function TasksPage() {
               hasChildren={(childrenByParent.get(t.id) ?? 0) > 0}
               childrenCollapsed={collapsedParents.has(t.id)}
               attachmentCount={attCount.get(t.id) ?? 0}
+              isDropTarget={dragState?.targetId === t.id}
+              dragLocked={!!dragState}
               onToggleExpand={() => toggleExpand(t.id)}
               onToggleChildren={() => toggleChildren(t.id)}
               onEdit={() => setEditTaskId(t.id)}
@@ -359,6 +361,7 @@ function TasksPage() {
               onIndent={() => handleIndent(t)}
               onOutdent={() => handleOutdent(t)}
               onAddSubtask={() => handleAddSubtask(t)}
+              onLongPressStart={(x, y) => handleLongPressStart(t.id, x, y)}
             />
           </li>
         ))}
