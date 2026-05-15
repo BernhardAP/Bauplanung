@@ -208,6 +208,14 @@ function TasksPage() {
       (m, t) => (t.parent_id === newParentId ? Math.max(m, t.sort_order) : m),
       0,
     );
+    // capture inverse for undo
+    const prevDragged = {
+      parent_id: dragged.parent_id,
+      depth: dragged.depth,
+      sort_order: dragged.sort_order,
+    };
+    const prevDescendants = descendants.map((d) => ({ id: d.id, depth: d.depth }));
+
     const { error: e1 } = await supabase.from('tasks').update({
       parent_id: newParentId,
       depth: newDepth,
@@ -221,6 +229,15 @@ function TasksPage() {
     setCollapsedParents((s) => { const n = new Set(s); n.delete(newParentId); return n; });
     qc.invalidateQueries({ queryKey: ['tasks'] });
     toast.success(`Verschoben unter „${newParent.title || 'Aufgabe'}"`);
+    undoStore.push(`Verschoben: „${dragged.title || 'Aufgabe'}"`, async () => {
+      const { error: u1 } = await supabase.from('tasks').update(prevDragged).eq('id', draggedId);
+      if (u1) throw u1;
+      for (const d of prevDescendants) {
+        const { error: u2 } = await supabase.from('tasks').update({ depth: d.depth }).eq('id', d.id);
+        if (u2) throw u2;
+      }
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+    });
   }
 
   function handleLongPressStart(taskId: string, x: number, y: number) {
