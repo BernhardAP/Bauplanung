@@ -290,7 +290,8 @@ export function NewTaskRow({ depth = 0, onCreate }: { depth?: number; onCreate: 
   );
 }
 
-export function nextStatus(s: TaskStatus): TaskStatus {
-  const i = STATUS_ORDER.indexOf(s);
-  return STATUS_ORDER[(i + 1) % STATUS_ORDER.length];
+export function nextStatus(s: TaskStatus, order?: TaskStatus[]): TaskStatus {
+  const list: TaskStatus[] = order && order.length > 0 ? order : (STATUS_ORDER as TaskStatus[]);
+  const i = list.indexOf(s);
+  return list[(i + 1) % list.length];
 }

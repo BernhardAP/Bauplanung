@@ -1,4 +1,5 @@
-export type TaskStatus = 'open' | 'in_progress' | 'waiting' | 'done' | 'blocked' | 'question';
+export type TaskStatus = string;
+export type BuiltInStatus = 'open' | 'in_progress' | 'waiting' | 'done' | 'blocked' | 'question';
 export type AttachmentKind = 'document' | 'email' | 'link';
 
 export interface Company {
@@ -41,9 +42,9 @@ export interface Attachment {
   created_at: string;
 }
 
-export const STATUS_ORDER: TaskStatus[] = ['open', 'in_progress', 'waiting', 'question', 'blocked', 'done'];
+export const STATUS_ORDER: BuiltInStatus[] = ['open', 'in_progress', 'waiting', 'question', 'blocked', 'done'];
 
-export const STATUS_LABEL: Record<TaskStatus, string> = {
+export const STATUS_LABEL: Record<BuiltInStatus, string> = {
   open: 'Offen',
   in_progress: 'In Arbeit',
   waiting: 'Wartet',
