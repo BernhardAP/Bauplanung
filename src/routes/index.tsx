@@ -84,7 +84,6 @@ function TasksPage() {
   }, [ordered, tasks, search, statusFilter, companyFilter, collapsedParents, filterActive]);
 
   const editTask = ordered.find((t) => t.id === editTaskId) ?? null;
-  const filterActive = statusFilter.size + companyFilter.size > 0 || search.trim().length > 0;
 
   const updateTask = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<Task> }) => {
