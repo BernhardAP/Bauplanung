@@ -49,7 +49,7 @@ function LoginScreen() {
     setError(null); setInfo(null);
     const mail = email.trim().toLowerCase();
     if (!ALLOWED.includes(mail)) {
-      setError('Diese E-Mail-Adresse ist nicht für den Zugriff freigegeben.');
+      setError('Anmeldung fehlgeschlagen.');
       return;
     }
     if (password.length < 8) {
