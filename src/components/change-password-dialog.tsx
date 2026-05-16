@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,24 +7,12 @@ import { Label } from '@/components/ui/label';
 import { KeyRound, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const LOCKED_PASSWORD = ['hoffmann@architekturundform.de'];
-
 export function ChangePasswordDialog() {
   const [open, setOpen] = useState(false);
   const [pw1, setPw1] = useState('');
   const [pw2, setPw2] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [locked, setLocked] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const mail = data.user?.email?.toLowerCase() ?? '';
-      setLocked(LOCKED_PASSWORD.includes(mail));
-    });
-  }, []);
-
-  if (locked) return null;
 
   function reset() {
     setPw1(''); setPw2(''); setError(null); setBusy(false);
