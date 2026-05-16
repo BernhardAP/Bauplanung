@@ -11,7 +11,7 @@ import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
 import { useStatusMeta } from '@/lib/use-status-meta';
 import { toast } from 'sonner';
-import { Search, X, LogOut } from 'lucide-react';
+import { Search, X, LogOut, Plus } from 'lucide-react';
 import { undoStore } from '@/lib/undo-store';
 import { UndoButton } from '@/components/undo-button';
 import { Button } from '@/components/ui/button';
