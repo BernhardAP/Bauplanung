@@ -89,10 +89,6 @@ function LoginScreen() {
       setError('Anmeldung fehlgeschlagen.');
       return;
     }
-    if (LOCKED_PASSWORD.includes(mail)) {
-      setError('Für dieses Konto ist das Zurücksetzen des Passworts deaktiviert.');
-      return;
-    }
     const { error } = await supabase.auth.resetPasswordForEmail(mail, {
       redirectTo: window.location.origin,
     });
