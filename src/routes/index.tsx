@@ -303,6 +303,25 @@ function TasksPage() {
     const maxOrder = tasks.reduce((m, t) => (t.parent_id === null ? Math.max(m, t.sort_order) : m), 0);
     createTask.mutate({ title, parent_id: null, depth: 0, sort_order: maxOrder + 1000 });
   }
+  async function handleCreateAndEdit() {
+    const maxOrder = tasks.reduce((m, t) => (t.parent_id === null ? Math.max(m, t.sort_order) : m), 0);
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({ title: '', parent_id: null, depth: 0, sort_order: maxOrder + 1000 })
+      .select('id')
+      .single();
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ['tasks'] });
+    if (data?.id) {
+      const newId = data.id;
+      undoStore.push(`Aufgabe erstellt`, async () => {
+        const { error: e } = await supabase.from('tasks').delete().eq('id', newId);
+        if (e) throw e;
+        qc.invalidateQueries({ queryKey: ['tasks'] });
+      });
+      setEditTaskId(newId);
+    }
+  }
 
   function toggleExpand(id: string) {
     setExpanded((s) => {
