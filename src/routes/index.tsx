@@ -464,9 +464,6 @@ function TasksPage() {
             />
           </li>
         ))}
-        {!filterActive && (
-          <li><NewTaskRow onCreate={handleCreateAtEnd} /></li>
-        )}
         {filtered.length === 0 && (
           <li className="px-4 py-8 text-center text-sm text-muted-foreground">Keine Aufgaben gefunden.</li>
         )}
