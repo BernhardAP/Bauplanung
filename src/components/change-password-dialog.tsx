@@ -25,11 +25,6 @@ export function ChangePasswordDialog() {
   }, []);
 
   if (locked) return null;
-  const [open, setOpen] = useState(false);
-  const [pw1, setPw1] = useState('');
-  const [pw2, setPw2] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   function reset() {
     setPw1(''); setPw2(''); setError(null); setBusy(false);
