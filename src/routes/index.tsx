@@ -11,7 +11,7 @@ import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
 import { useStatusMeta } from '@/lib/use-status-meta';
 import { toast } from 'sonner';
-import { Search, X, LogOut } from 'lucide-react';
+import { Search, X, LogOut, Plus } from 'lucide-react';
 import { undoStore } from '@/lib/undo-store';
 import { UndoButton } from '@/components/undo-button';
 import { Button } from '@/components/ui/button';
@@ -303,6 +303,25 @@ function TasksPage() {
     const maxOrder = tasks.reduce((m, t) => (t.parent_id === null ? Math.max(m, t.sort_order) : m), 0);
     createTask.mutate({ title, parent_id: null, depth: 0, sort_order: maxOrder + 1000 });
   }
+  async function handleCreateAndEdit() {
+    const maxOrder = tasks.reduce((m, t) => (t.parent_id === null ? Math.max(m, t.sort_order) : m), 0);
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({ title: '', parent_id: null, depth: 0, sort_order: maxOrder + 1000 })
+      .select('id')
+      .single();
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ['tasks'] });
+    if (data?.id) {
+      const newId = data.id;
+      undoStore.push(`Aufgabe erstellt`, async () => {
+        const { error: e } = await supabase.from('tasks').delete().eq('id', newId);
+        if (e) throw e;
+        qc.invalidateQueries({ queryKey: ['tasks'] });
+      });
+      setEditTaskId(newId);
+    }
+  }
 
   function toggleExpand(id: string) {
     setExpanded((s) => {
@@ -406,7 +425,14 @@ function TasksPage() {
           className="hidden md:grid items-center gap-3 px-4 pb-2 text-[10px] uppercase tracking-wide text-muted-foreground border-t pt-2"
           style={{ gridTemplateColumns: 'auto minmax(0, 1fr) 180px 160px 90px auto', paddingLeft: 16 }}
         >
-          <span className="w-5" />
+          <button
+            onClick={handleCreateAndEdit}
+            className="w-5 h-5 inline-flex items-center justify-center rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+            aria-label="Neue Aufgabe"
+            title="Neue Aufgabe"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
           <span>Aufgabe</span>
           <span>Unternehmen</span>
           <span>Zeitraum</span>
@@ -438,9 +464,6 @@ function TasksPage() {
             />
           </li>
         ))}
-        {!filterActive && (
-          <li><NewTaskRow onCreate={handleCreateAtEnd} /></li>
-        )}
         {filtered.length === 0 && (
           <li className="px-4 py-8 text-center text-sm text-muted-foreground">Keine Aufgaben gefunden.</li>
         )}
