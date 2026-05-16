@@ -425,7 +425,14 @@ function TasksPage() {
           className="hidden md:grid items-center gap-3 px-4 pb-2 text-[10px] uppercase tracking-wide text-muted-foreground border-t pt-2"
           style={{ gridTemplateColumns: 'auto minmax(0, 1fr) 180px 160px 90px auto', paddingLeft: 16 }}
         >
-          <span className="w-5" />
+          <button
+            onClick={handleCreateAndEdit}
+            className="w-5 h-5 inline-flex items-center justify-center rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+            aria-label="Neue Aufgabe"
+            title="Neue Aufgabe"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
           <span>Aufgabe</span>
           <span>Unternehmen</span>
           <span>Zeitraum</span>
