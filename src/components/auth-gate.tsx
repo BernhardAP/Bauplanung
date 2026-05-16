@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Loader2, Lock } from 'lucide-react';
 
-const ALLOWED = ['gisela.gruender@gmx.de', 'bernhard.gruender@outlook.com'];
+const ALLOWED = ['gisela.gruender@gmx.de', 'bernhard.gruender@outlook.com', 'hoffmann@architekturundform.de'];
+const LOCKED_PASSWORD = ['hoffmann@architekturundform.de'];
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -87,6 +88,10 @@ function LoginScreen() {
     const mail = email.trim().toLowerCase();
     if (!ALLOWED.includes(mail)) {
       setError('Anmeldung fehlgeschlagen.');
+      return;
+    }
+    if (LOCKED_PASSWORD.includes(mail)) {
+      setError('Für dieses Konto ist das Zurücksetzen des Passworts deaktiviert.');
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(mail, {
