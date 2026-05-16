@@ -46,7 +46,7 @@ export function TaskRow({
   onLongPressStart,
 }: Props) {
   const { meta: statusMeta } = useStatusMeta();
-  const sm = statusMeta[task.status];
+  const sm = statusMeta[task.status] ?? { status: task.status, label: task.status, sort_order: 999, color: null, icon: null };
   const x = useMotionValue(0);
   const bg = useTransform(x, [-120, -40, 0, 40, 120],
     ['oklch(0.85 0.05 250 / 0.4)', 'transparent', 'transparent', 'transparent', 'oklch(0.82 0.16 85 / 0.4)']);
