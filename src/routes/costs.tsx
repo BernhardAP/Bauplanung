@@ -30,10 +30,17 @@ function CostsPage() {
     [tasks],
   );
 
+  const currentOf = (t: typeof rows[number]) =>
+    t.final_price != null ? Number(t.final_price)
+      : t.offered_price != null ? Number(t.offered_price)
+      : t.planned_cost != null ? Number(t.planned_cost)
+      : null;
+
   const sum = (key: 'planned_cost' | 'offered_price' | 'final_price') =>
     rows.reduce((s, t) => s + (t[key] != null ? Number(t[key]) : 0), 0);
 
   const totals = {
+    current: rows.reduce((s, t) => s + (currentOf(t) ?? 0), 0),
     planned: sum('planned_cost'),
     offered: sum('offered_price'),
     final: sum('final_price'),
