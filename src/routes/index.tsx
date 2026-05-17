@@ -302,7 +302,7 @@ function TasksPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               {filtered.length}{filterActive ? ` / ${ordered.length}` : ''} Aufgaben ·{' '}
-              <span>Lange drücken für Aktionen</span>
+              <span>Aufgabe antippen für Details &amp; Aktionen</span>
             </p>
           </div>
           <div className="flex items-center gap-1">
