@@ -4,7 +4,7 @@ import { useIsAdmin } from '@/lib/use-current-user';
 
 export function BottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const isAdmin = useIsAdmin();
+  const { isAdmin } = useIsAdmin();
   const items = [
     { to: '/', label: 'Aufgaben', icon: ListChecks, match: (p: string) => p === '/' },
     { to: '/timeline', label: 'Zeitplan', icon: CalendarRange, match: (p: string) => p.startsWith('/timeline') },
