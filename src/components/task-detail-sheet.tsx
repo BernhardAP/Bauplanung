@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Phone, Mail, Link2, Trash2, X, ExternalLink, Inbox } from 'lucide-react';
+import { Phone, Mail, Link2, Trash2, X, ExternalLink, Inbox, IndentIncrease, IndentDecrease, Plus, Move } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAttachments, fetchCompanies } from '@/lib/queries';
@@ -23,6 +23,11 @@ interface Props {
   task: Task | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  allTasks?: Task[];
+  onIndent?: (task: Task) => void;
+  onOutdent?: (task: Task) => void;
+  onAddSubtask?: (task: Task) => void;
+  onReparent?: (task: Task, newParentId: string | null) => void;
 }
 
 export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
