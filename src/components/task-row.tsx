@@ -88,21 +88,21 @@ export function TaskRow({
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0 mt-0.5" title={sm.label}>
               <StatusIcon status={task.status} className="h-5 w-5" color={sm.color ?? undefined} label={sm.label} />
             </button>
-            <button onClick={onEdit} className="text-left min-w-0 flex items-start gap-1.5">
+            <div className="min-w-0 flex items-start gap-1.5">
               {task.depth > 0 && (
                 <CornerDownRight className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/60" aria-hidden />
               )}
               {hasChildren && (
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleChildren?.(); }}
+                  onClick={(e) => { e.stopPropagation(); onToggleChildren?.(); }}
                   className="p-0.5 -m-0.5 mt-0 shrink-0 text-muted-foreground hover:text-foreground"
                   aria-label={childrenCollapsed ? 'Unteraufgaben einblenden' : 'Unteraufgaben ausblenden'}
                 >
                   <ChevronRight className={`h-4 w-4 transition-transform ${childrenCollapsed ? '' : 'rotate-90'}`} />
                 </button>
               )}
-              <div className="min-w-0 flex-1">
+              <button onClick={onEdit} className="text-left min-w-0 flex-1">
                 <div className={`font-medium truncate ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
                   {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
                 </div>
@@ -111,8 +111,8 @@ export function TaskRow({
                     <FileText className="h-3 w-3 shrink-0 mt-0.5" /><span>{task.notes}</span>
                   </div>
                 )}
-              </div>
-            </button>
+              </button>
+            </div>
             <div className="text-xs text-muted-foreground truncate">
               {company ? <CompanyBadge company={company} showName /> : <span className="text-muted-foreground/60">—</span>}
             </div>
