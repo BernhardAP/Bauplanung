@@ -16,6 +16,7 @@ import { undoStore } from '@/lib/undo-store';
 import { UndoButton } from '@/components/undo-button';
 import { Button } from '@/components/ui/button';
 import { ChangePasswordDialog } from '@/components/change-password-dialog';
+import { HelpButton } from '@/components/help-button';
 
 export const Route = createFileRoute('/')({
   head: () => ({
