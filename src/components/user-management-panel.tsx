@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Trash2 } from 'lucide-react';
+import { Loader2, Mail, Send, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { inviteUser, listAllowedEmails, removeAllowedEmail } from '@/lib/users.functions';
 import { ADMIN_EMAIL } from '@/lib/use-current-user';
@@ -75,21 +75,51 @@ export function UserManagementPanel() {
         <h3 className="text-sm font-medium">Freigeschaltete Adressen</h3>
         {isLoading && <p className="text-xs text-muted-foreground">Lade…</p>}
         <ul className="divide-y rounded-lg border">
-          {data?.emails.map((row) => (
-            <li key={row.email} className="flex items-center justify-between px-3 py-2 text-sm">
-              <span className="truncate">{row.email}</span>
-              {row.email !== ADMIN_EMAIL && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemove(row.email)}
-                  aria-label="Entfernen"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </li>
-          ))}
+          {data?.emails.map((row) => {
+            const subject = 'Einladung zur Bauplanung Leiwen';
+            const body = `Hallo,
+
+ich lade Dich zur gemeinsamen Bauplanung Leiwen ein. Über die App können wir Aufgaben, Termine, Kosten und Unternehmen rund um das Bauprojekt zentral verwalten.
+
+So kommst Du rein:
+1. Öffne die App: https://idea-nest-mate.lovable.app
+2. Melde Dich mit dieser E-Mail-Adresse an: ${row.email}
+3. Beim ersten Login vergibst Du Dein eigenes Passwort.
+
+Falls Du Fragen hast, melde Dich einfach bei mir.
+
+Viele Grüße
+Bernhard`;
+            const mailto = `mailto:${encodeURIComponent(row.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            return (
+              <li key={row.email} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                <span className="truncate flex-1">{row.email}</span>
+                {row.email !== ADMIN_EMAIL && (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                      aria-label="Einladungs-E-Mail im E-Mail-Programm öffnen"
+                      title="Einladungs-E-Mail im E-Mail-Programm öffnen"
+                    >
+                      <a href={mailto}>
+                        <Send className="h-4 w-4" />
+                      </a>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemove(row.email)}
+                      aria-label="Entfernen"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>
