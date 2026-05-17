@@ -293,9 +293,9 @@ function TasksPage() {
               <HelpButton title="Aufgabenliste">
                 <p>Hier verwaltest Du alle Aufgaben des Bauprojekts.</p>
                 <ul className="list-disc pl-4 space-y-1">
-                  <li><b>Tippen</b> auf eine Zeile: Details ein-/ausklappen</li>
+                  <li><b>Tippen</b> auf eine Zeile: Detailansicht öffnen (dort gibt es alle Aktionen)</li>
                   <li><b>Tippen</b> auf das Status-Symbol: Status weiterschalten</li>
-                  <li><b>Lange drücken</b> auf eine Zeile: Aktionsmenü („rumhängen") mit Einrücken, Ausrücken, Verschieben, Unteraufgabe</li>
+                  <li><b>Pfeil</b> rechts an Eltern-Aufgaben: Unteraufgaben ein-/ausblenden</li>
                   <li>Oben filtern nach Status, Unternehmen oder Suchbegriff</li>
                 </ul>
               </HelpButton>
