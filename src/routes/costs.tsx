@@ -53,7 +53,20 @@ function CostsPage() {
   return (
     <div>
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b px-4 py-3">
-        <h1 className="text-lg md:text-xl font-semibold">Kostenstatus</h1>
+        <div className="flex items-center gap-1.5">
+          <h1 className="text-lg md:text-xl font-semibold">Kostenstatus</h1>
+          <HelpButton title="Kostenstatus">
+            <p>Übersicht aller Aufgaben mit Kosten.</p>
+            <ul className="list-disc pl-4 space-y-1">
+              <li><b>Geplant</b>: erste Schätzung</li>
+              <li><b>Angebot</b>: erhaltenes Angebot</li>
+              <li><b>Final</b>: tatsächlicher Endbetrag</li>
+              <li><b>Aktuell</b>: bester verfügbarer Wert (Final → Angebot → Geplant)</li>
+              <li>Pfeil neben „Aktuell“ blendet die Detailspalten ein/aus</li>
+              <li>Aufgabe antippen zum Bearbeiten</li>
+            </ul>
+          </HelpButton>
+        </div>
         <p className="text-xs text-muted-foreground">{rows.length} Aufgaben mit Kosten</p>
       </header>
 
