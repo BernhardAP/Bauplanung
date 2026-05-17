@@ -13,11 +13,12 @@ export const Route = createFileRoute('/settings')({
 });
 
 function SettingsPage() {
-  const isAdmin = useIsAdmin();
+  const { isAdmin, loading } = useIsAdmin();
   const navigate = useNavigate();
   useEffect(() => {
-    if (!isAdmin) navigate({ to: '/' });
-  }, [isAdmin, navigate]);
+    if (!loading && !isAdmin) navigate({ to: '/' });
+  }, [isAdmin, loading, navigate]);
+  if (loading) return null;
   if (!isAdmin) return null;
 
   return (
