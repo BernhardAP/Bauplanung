@@ -394,20 +394,12 @@ function TasksPage() {
             <TaskRow
               task={t}
               company={t.company_id ? companyById[t.company_id] ?? null : null}
-              expanded={expanded.has(t.id)}
               hasChildren={(childrenByParent.get(t.id) ?? 0) > 0}
               childrenCollapsed={collapsedParents.has(t.id)}
               attachmentCount={attCount.get(t.id) ?? 0}
-              isDropTarget={dragState?.targetId === t.id}
-              dragLocked={!!dragState}
-              onToggleExpand={() => toggleExpand(t.id)}
               onToggleChildren={() => toggleChildren(t.id)}
               onEdit={() => setEditTaskId(t.id)}
               onCycleStatus={() => applyUpdate(t.id, { status: nextStatus(t.status, statusMeta.order) }, `Status: „${t.title || 'Aufgabe'}"`)}
-              onIndent={() => handleIndent(t)}
-              onOutdent={() => handleOutdent(t)}
-              onAddSubtask={() => handleAddSubtask(t)}
-              onStartMove={(x, y) => handleLongPressStart(t.id, x, y)}
             />
           </li>
         ))}
@@ -420,23 +412,13 @@ function TasksPage() {
         task={editTask}
         open={!!editTaskId}
         onOpenChange={(o) => { if (!o) setEditTaskId(null); }}
+        allTasks={tasks}
+        onIndent={(t) => handleIndent(t)}
+        onOutdent={(t) => handleOutdent(t)}
+        onAddSubtask={(t) => handleAddSubtask(t)}
+        onReparent={(t, newParentId) => handleReparent(t.id, newParentId)}
       />
-
-      {dragState && draggedTask && (
-        <div
-          className="pointer-events-none fixed z-50 px-3 py-2 rounded-md border bg-card shadow-lg text-sm max-w-[80vw] truncate"
-          style={{
-            left: dragState.x,
-            top: dragState.y,
-            transform: 'translate(-50%, -120%)',
-          }}
-        >
-          {draggedTask.title || '(ohne Titel)'}
-          {dragState.targetId && (
-            <span className="ml-2 text-xs text-primary">→ Unteraufgabe</span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
+
