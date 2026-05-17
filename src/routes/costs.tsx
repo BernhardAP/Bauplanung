@@ -2,7 +2,8 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { fetchTasks, fetchCompanies } from '@/lib/queries';
 import { CompanyBadge } from '@/components/company-badge';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const Route = createFileRoute('/costs')({
   head: () => ({
