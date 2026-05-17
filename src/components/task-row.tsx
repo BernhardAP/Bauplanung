@@ -173,6 +173,9 @@ export function TaskRow({
               <StatusIcon status={task.status} className="h-5 w-5" color={sm.color ?? undefined} label={sm.label} />
             </button>
             <button onClick={onRowClick} className="text-left min-w-0 flex items-start gap-1.5">
+              {task.depth > 0 && (
+                <CornerDownRight className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/60" aria-hidden />
+              )}
               {hasChildren && (
                 <ChevronRight className={`h-4 w-4 mt-0.5 shrink-0 text-muted-foreground transition-transform ${childrenCollapsed ? '' : 'rotate-90'}`} />
               )}
