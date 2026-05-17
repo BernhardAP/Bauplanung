@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip, ExternalLink, Plus } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip, ExternalLink, Plus, CornerDownRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { StatusIcon } from '@/lib/status-icon';
 import { CompanyBadge } from '@/components/company-badge';
@@ -141,6 +141,7 @@ export function TaskRow({
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0" aria-label="Status">
               <StatusIcon status={task.status} className="h-5 w-5" />
             </button>
+            {task.depth > 0 && <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" aria-hidden />}
             <button onClick={onRowClick} className="flex-1 text-left flex items-center gap-2 min-w-0">
               <span className={`flex-1 truncate text-sm ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
                 {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
@@ -172,6 +173,9 @@ export function TaskRow({
               <StatusIcon status={task.status} className="h-5 w-5" color={sm.color ?? undefined} label={sm.label} />
             </button>
             <button onClick={onRowClick} className="text-left min-w-0 flex items-start gap-1.5">
+              {task.depth > 0 && (
+                <CornerDownRight className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/60" aria-hidden />
+              )}
               {hasChildren && (
                 <ChevronRight className={`h-4 w-4 mt-0.5 shrink-0 text-muted-foreground transition-transform ${childrenCollapsed ? '' : 'rotate-90'}`} />
               )}
