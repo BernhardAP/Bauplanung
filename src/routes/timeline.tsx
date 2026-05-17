@@ -152,7 +152,18 @@ function TimelinePage() {
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
         <div className="px-4 py-3 flex items-center justify-between gap-2">
           <div>
-            <h1 className="text-lg md:text-xl font-semibold">Zeitplan</h1>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-lg md:text-xl font-semibold">Zeitplan</h1>
+              <HelpButton title="Zeitplan">
+                <p>Visuelle Übersicht aller terminierten Aufgaben.</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li><b>Tag / Woche / Monat</b>: Zoomstufe wählen</li>
+                  <li><b>Balken antippen</b>: Aufgabe öffnen und bearbeiten</li>
+                  <li>Farbe = Unternehmen, Symbol = Status</li>
+                  <li>Aufgaben ohne Datum erscheinen unten als „offen“</li>
+                </ul>
+              </HelpButton>
+            </div>
             <p className="text-xs text-muted-foreground">
               {dated.length} terminiert · {undatedOpen.length} offen ohne Datum
             </p>
