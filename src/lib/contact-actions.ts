@@ -29,3 +29,8 @@ export function makeTelHref(company: Company | null) {
   if (!company?.telefon) return null;
   return `tel:${company.telefon.replace(/\s+/g, '')}`;
 }
+
+export function makeMapHref(address: string | null | undefined) {
+  if (!address || !address.trim()) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address.trim())}`;
+}

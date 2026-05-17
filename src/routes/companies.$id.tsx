@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Trash2 } from 'lucide-react';
+import { makeMapHref } from '@/lib/contact-actions';
 import type { Company } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -76,7 +77,22 @@ function CompanyDetail() {
         <div><Label className="text-xs">Kontaktperson</Label><Input value={draft.kontaktperson ?? ''} onChange={(e) => field('kontaktperson', e.target.value || null)} onBlur={() => commit('kontaktperson')} /></div>
         <div><Label className="text-xs">Telefon</Label><Input type="tel" value={draft.telefon ?? ''} onChange={(e) => field('telefon', e.target.value || null)} onBlur={() => commit('telefon')} /></div>
         <div><Label className="text-xs">E-Mail</Label><Input type="email" value={draft.email ?? ''} onChange={(e) => field('email', e.target.value || null)} onBlur={() => commit('email')} /></div>
-        <div><Label className="text-xs">Adresse</Label><Input value={draft.adresse ?? ''} onChange={(e) => field('adresse', e.target.value || null)} onBlur={() => commit('adresse')} /></div>
+        <div>
+          <Label className="text-xs">Adresse</Label>
+          <div className="flex items-center gap-2">
+            <Input value={draft.adresse ?? ''} onChange={(e) => field('adresse', e.target.value || null)} onBlur={() => commit('adresse')} />
+            <a
+              href={makeMapHref(draft.adresse) ?? '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="In Karten-App öffnen"
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-md border ${draft.adresse ? 'text-foreground hover:bg-accent' : 'text-muted-foreground/40 pointer-events-none'}`}
+              onClick={(e) => { if (!draft.adresse) e.preventDefault(); }}
+            >
+              <MapPin className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
         <div><Label className="text-xs">Web</Label><Input value={draft.web ?? ''} onChange={(e) => field('web', e.target.value || null)} onBlur={() => commit('web')} /></div>
         <div><Label className="text-xs">Notizen</Label><Textarea rows={3} value={draft.notes ?? ''} onChange={(e) => field('notes', e.target.value || null)} onBlur={() => commit('notes')} /></div>
         <label className="flex items-center justify-between border rounded-md px-3 py-2">
