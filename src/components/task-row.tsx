@@ -1,13 +1,12 @@
-import { useRef, useState } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Calendar, FileText, Pencil, ChevronDown, Paperclip, ExternalLink, Plus, CornerDownRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronRight, Calendar, FileText, Pencil, ChevronDown, Paperclip, ExternalLink, Plus, CornerDownRight, IndentIncrease, IndentDecrease, Move, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { StatusIcon } from '@/lib/status-icon';
 import { CompanyBadge } from '@/components/company-badge';
 import { fetchAttachments } from '@/lib/queries';
 import { supabase } from '@/integrations/supabase/client';
 import type { Task, TaskStatus, Company } from '@/lib/types';
-import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
+import { STATUS_ORDER } from '@/lib/types';
 import { useStatusMeta } from '@/lib/use-status-meta';
 
 interface Props {
@@ -26,7 +25,7 @@ interface Props {
   onIndent: () => void;
   onOutdent: () => void;
   onAddSubtask: () => void;
-  onLongPressStart?: (clientX: number, clientY: number) => void;
+  onStartMove?: (clientX: number, clientY: number) => void;
 }
 
 function fmtDate(s: string | null) {
@@ -43,19 +42,12 @@ export function TaskRow({
   task, company, expanded, hasChildren = false, childrenCollapsed = false, attachmentCount = 0,
   isDropTarget = false, dragLocked = false,
   onToggleExpand, onToggleChildren, onEdit, onCycleStatus, onIndent, onOutdent, onAddSubtask,
-  onLongPressStart,
+  onStartMove,
 }: Props) {
   const { meta: statusMeta } = useStatusMeta();
   const sm = statusMeta[task.status] ?? { status: task.status, label: task.status, sort_order: 999, color: null, icon: null };
-  const x = useMotionValue(0);
-  const bg = useTransform(x, [-120, -40, 0, 40, 120],
-    ['oklch(0.85 0.05 250 / 0.4)', 'transparent', 'transparent', 'transparent', 'oklch(0.82 0.16 85 / 0.4)']);
-  const leftHintOpacity = useTransform(x, [-120, -20, 0], [1, 0, 0]);
-  const rightHintOpacity = useTransform(x, [0, 20, 120], [0, 0, 1]);
   const dateText = fmtRange(task.start_date, task.end_date);
   const accentColor = company?.color ?? null;
-  // For parents: clicking the row toggles children visibility.
-  // For leaves: clicking toggles inline detail view.
   const onRowClick = hasChildren ? (onToggleChildren ?? onToggleExpand) : onToggleExpand;
 
   const { data: attachments = [] } = useQuery({
@@ -65,13 +57,15 @@ export function TaskRow({
     staleTime: 30_000,
   });
 
+  // ----- Long-press → action menu ("rumhängen") -----
+  const [menuOpen, setMenuOpen] = useState(false);
   const pressTimer = useRef<number | null>(null);
   const pressStart = useRef<{ x: number; y: number } | null>(null);
   const pressFired = useRef(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  const clearPress = (reason?: string) => {
+  const clearPress = () => {
     if (pressTimer.current !== null) {
-      console.log('[longpress] cancel', task.id.slice(0, 6), reason);
       window.clearTimeout(pressTimer.current);
       pressTimer.current = null;
     }
@@ -79,54 +73,66 @@ export function TaskRow({
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (dragLocked) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // Don't trigger long-press from buttons (status icon, expand, etc.)
+    const tgt = e.target as HTMLElement;
+    if (tgt.closest('button, a, input')) return;
     pressFired.current = false;
     pressStart.current = { x: e.clientX, y: e.clientY };
-    console.log('[longpress] down', task.id.slice(0, 6), e.pointerType);
     pressTimer.current = window.setTimeout(() => {
       pressFired.current = true;
-      console.log('[longpress] FIRE', task.id.slice(0, 6));
       if (navigator.vibrate) navigator.vibrate(30);
-      onLongPressStart?.(pressStart.current?.x ?? 0, pressStart.current?.y ?? 0);
-    }, 350);
+      setMenuOpen(true);
+    }, 400);
   };
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!pressStart.current || pressFired.current) return;
     const dx = e.clientX - pressStart.current.x;
     const dy = e.clientY - pressStart.current.y;
-    if (Math.hypot(dx, dy) > 12) clearPress(`move ${Math.round(Math.hypot(dx, dy))}`);
+    if (Math.hypot(dx, dy) > 10) clearPress();
   };
+  const swallowClickIfFired = (e: React.MouseEvent) => {
+    if (pressFired.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      pressFired.current = false;
+    }
+  };
+
+  // Close menu on outside click / Escape
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('pointerdown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <div
+      ref={rootRef}
       className="relative select-none"
       data-task-id={task.id}
       style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
       onContextMenu={(e) => e.preventDefault()}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={clearPress}
+      onPointerCancel={clearPress}
+      onClickCapture={swallowClickIfFired}
     >
-      <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none text-muted-foreground">
-        <motion.span style={{ opacity: leftHintOpacity }}><ChevronLeft className="h-5 w-5" /></motion.span>
-        <motion.span style={{ opacity: rightHintOpacity }}><ChevronRight className="h-5 w-5" /></motion.span>
-      </div>
-
-      <motion.div
-        drag={dragLocked ? false : 'x'}
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.4}
-        style={{ x, backgroundColor: bg }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={() => clearPress('up')}
-        onPointerCancel={() => clearPress('cancel')}
-        onDragStart={() => clearPress('framer-drag')}
-        onDragEnd={(_, info) => {
-          clearPress('drag-end');
-          if (info.offset.x > 80) onIndent();
-          else if (info.offset.x < -80) onOutdent();
-        }}
-        className={`border-b bg-card transition-shadow ${isDropTarget ? 'ring-2 ring-inset ring-primary bg-primary/5' : ''}`}
+      <div
+        className={`border-b bg-card transition-shadow ${isDropTarget ? 'ring-2 ring-inset ring-primary bg-primary/5' : ''} ${menuOpen ? 'bg-accent/40' : ''}`}
       >
-        {/* color accent stripe (depth-aware padding handled inside) */}
         <div className="relative">
           {accentColor && (
             <span
@@ -202,7 +208,33 @@ export function TaskRow({
             </button>
           </div>
 
-          {/* Inline expansion (mobile + desktop) */}
+          {/* Action menu ("rumhängen") — appears after long press */}
+          {menuOpen && (
+            <div className="border-t bg-accent/30 px-2 py-1.5 flex flex-wrap items-center gap-1.5">
+              <ActionChip icon={<IndentDecrease className="h-3.5 w-3.5" />} label="Ausrücken" onClick={() => { onOutdent(); closeMenu(); }} />
+              <ActionChip icon={<IndentIncrease className="h-3.5 w-3.5" />} label="Einrücken" onClick={() => { onIndent(); closeMenu(); }} />
+              <ActionChip
+                icon={<Move className="h-3.5 w-3.5" />}
+                label="Verschieben"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  closeMenu();
+                  onStartMove?.(e.clientX, e.clientY);
+                }}
+              />
+              <ActionChip icon={<Plus className="h-3.5 w-3.5" />} label="Unteraufgabe" onClick={() => { onAddSubtask(); closeMenu(); }} />
+              <ActionChip icon={<Pencil className="h-3.5 w-3.5" />} label="Bearbeiten" onClick={() => { onEdit(); closeMenu(); }} />
+              <button
+                onClick={closeMenu}
+                className="ml-auto p-1 text-muted-foreground hover:text-foreground"
+                aria-label="Menü schließen"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Inline expansion */}
           {expanded && (
             <div
               className="bg-muted/40 border-t pb-3 pt-2 pr-3 text-sm space-y-1.5"
@@ -273,8 +305,27 @@ export function TaskRow({
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
     </div>
+  );
+}
+
+function ActionChip({
+  icon, label, onClick, onPointerDown,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: (e: React.MouseEvent) => void;
+  onPointerDown?: (e: React.PointerEvent) => void;
+}) {
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); onClick?.(e); }}
+      onPointerDown={onPointerDown}
+      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md border bg-background hover:bg-accent active:scale-95 transition"
+    >
+      {icon} {label}
+    </button>
   );
 }
 

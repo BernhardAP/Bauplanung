@@ -359,17 +359,14 @@ function TasksPage() {
                 <ul className="list-disc pl-4 space-y-1">
                   <li><b>Tippen</b> auf eine Zeile: Details ein-/ausklappen</li>
                   <li><b>Tippen</b> auf das Status-Symbol: Status weiterschalten</li>
-                  <li><b>Swipe →</b>: Aufgabe einrücken (Unterpunkt)</li>
-                  <li><b>Swipe ←</b>: Aufgabe ausrücken</li>
-                  <li><b>Lange drücken</b>: Aufgabe verschieben</li>
+                  <li><b>Lange drücken</b> auf eine Zeile: Aktionsmenü („rumhängen") mit Einrücken, Ausrücken, Verschieben, Unteraufgabe</li>
                   <li>Oben filtern nach Status, Unternehmen oder Suchbegriff</li>
                 </ul>
               </HelpButton>
             </div>
             <p className="text-xs text-muted-foreground">
               {filtered.length}{filterActive ? ` / ${ordered.length}` : ''} Aufgaben ·{' '}
-              <span className="md:hidden">Tippen klappt auf · Swipe ⇆ Hierarchie</span>
-              <span className="hidden md:inline">Tippen klappt auf · ✏️ bearbeiten · Swipe ⇆ Hierarchie</span>
+              <span>Lange drücken für Aktionen</span>
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -474,7 +471,7 @@ function TasksPage() {
               onIndent={() => handleIndent(t)}
               onOutdent={() => handleOutdent(t)}
               onAddSubtask={() => handleAddSubtask(t)}
-              onLongPressStart={(x, y) => handleLongPressStart(t.id, x, y)}
+              onStartMove={(x, y) => handleLongPressStart(t.id, x, y)}
             />
           </li>
         ))}
