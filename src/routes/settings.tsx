@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BackupPanel } from '@/components/backup-panel';
 import { StatusManagementPanel } from '@/components/status-management-panel';
 import { UserManagementPanel } from '@/components/user-management-panel';
+import { HelpButton } from '@/components/help-button';
 import { useIsAdmin } from '@/lib/use-current-user';
 import { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
