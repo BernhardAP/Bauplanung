@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Loader2, Lock } from 'lucide-react';
 
-const ALLOWED = ['gisela.gruender@gmx.de', 'bernhard.gruender@outlook.com', 'hoffmann@architekturundform.de'];
+
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -48,10 +48,6 @@ function LoginScreen() {
     e.preventDefault();
     setError(null); setInfo(null);
     const mail = email.trim().toLowerCase();
-    if (!ALLOWED.includes(mail)) {
-      setError('Anmeldung fehlgeschlagen.');
-      return;
-    }
     if (password.length < 8) {
       setError('Passwort muss mindestens 8 Zeichen lang sein.');
       return;
@@ -85,10 +81,6 @@ function LoginScreen() {
   async function forgot() {
     setError(null); setInfo(null);
     const mail = email.trim().toLowerCase();
-    if (!ALLOWED.includes(mail)) {
-      setError('Anmeldung fehlgeschlagen.');
-      return;
-    }
     const { error } = await supabase.auth.resetPasswordForEmail(mail, {
       redirectTo: window.location.origin,
     });
