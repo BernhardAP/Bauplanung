@@ -1,11 +1,10 @@
 import { useState, type ReactNode } from 'react';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Lightbulb } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
 
 interface Props {
@@ -32,13 +31,21 @@ export function HelpButton({ title, children, size = 'md' }: Props) {
         <HelpCircle className={iconCls} />
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription asChild>
-              <div className="text-sm text-muted-foreground space-y-2 pt-1">{children}</div>
-            </DialogDescription>
+        <DialogContent className="max-w-sm p-0 overflow-hidden gap-0">
+          <DialogHeader className="space-y-0 text-left p-5 pb-3 border-b bg-muted/40">
+            <div className="flex items-center gap-2.5">
+              <span
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full shrink-0"
+                style={{ backgroundColor: 'var(--accent)', color: 'var(--accent-foreground)' }}
+              >
+                <Lightbulb className="h-4 w-4" />
+              </span>
+              <DialogTitle className="text-base font-semibold leading-tight">{title}</DialogTitle>
+            </div>
           </DialogHeader>
+          <div className="help-body p-5 pt-4 text-sm leading-relaxed text-foreground/90 space-y-2.5">
+            {children}
+          </div>
         </DialogContent>
       </Dialog>
     </>

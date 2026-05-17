@@ -100,3 +100,31 @@
     overscroll-behavior-y: contain;
   }
 }
+
+/* Hilfe-Dialog Inhalt */
+.help-body p { margin: 0; }
+.help-body ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.help-body ul li {
+  position: relative;
+  padding-left: 1.1rem;
+  text-align: left;
+}
+.help-body ul li::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  top: 0.55rem;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 9999px;
+  background: var(--accent);
+}
+.help-body b, .help-body strong { color: var(--foreground); font-weight: 600; }
+
