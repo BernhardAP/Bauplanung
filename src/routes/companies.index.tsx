@@ -6,6 +6,7 @@ import { fetchCompanies } from '@/lib/queries';
 import { Button } from '@/components/ui/button';
 import { CompanyBadge } from '@/components/company-badge';
 import { Plus, Phone, Mail, Search, X } from 'lucide-react';
+import { HelpButton } from '@/components/help-button';
 
 export const Route = createFileRoute('/companies/')({
   head: () => ({
