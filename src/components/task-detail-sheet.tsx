@@ -30,7 +30,7 @@ interface Props {
   onReparent?: (task: Task, newParentId: string | null) => void;
 }
 
-export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
+export function TaskDetailSheet({ task, open, onOpenChange, allTasks = [], onIndent, onOutdent, onAddSubtask, onReparent }: Props) {
   const statusMeta = useStatusMeta();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Task | null>(null);
