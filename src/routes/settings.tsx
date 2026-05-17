@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BackupPanel } from '@/components/backup-panel';
 import { StatusManagementPanel } from '@/components/status-management-panel';
 import { UserManagementPanel } from '@/components/user-management-panel';
+import { HelpButton } from '@/components/help-button';
 import { useIsAdmin } from '@/lib/use-current-user';
 import { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
@@ -23,7 +24,17 @@ function SettingsPage() {
 
   return (
     <div className="max-w-md mx-auto p-4 pb-24 space-y-4">
-      <h1 className="text-xl font-semibold">Einstellungen</h1>
+      <div className="flex items-center gap-1.5">
+        <h1 className="text-xl font-semibold">Einstellungen</h1>
+        <HelpButton title="Einstellungen">
+          <p>Admin-Bereich für die App-Konfiguration.</p>
+          <ul className="list-disc pl-4 space-y-1">
+            <li><b>Nutzer</b>: Personen anlegen, Einladungs-Mail per Knopfdruck</li>
+            <li><b>Status</b>: eigene Status-Werte, Reihenfolge, Farbe, Symbol</li>
+            <li><b>Backup</b>: Export & Wiederherstellung aller Daten</li>
+          </ul>
+        </HelpButton>
+      </div>
       <Tabs defaultValue="users">
         <TabsList className="grid grid-cols-3 w-full">
           <TabsTrigger value="users">Nutzer</TabsTrigger>

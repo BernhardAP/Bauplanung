@@ -6,6 +6,7 @@ import { fetchCompanies } from '@/lib/queries';
 import { Button } from '@/components/ui/button';
 import { CompanyBadge } from '@/components/company-badge';
 import { Plus, Phone, Mail, Search, X } from 'lucide-react';
+import { HelpButton } from '@/components/help-button';
 
 export const Route = createFileRoute('/companies/')({
   head: () => ({
@@ -47,7 +48,18 @@ function CompaniesPage() {
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
         <div className="px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold">Unternehmen</h1>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-lg font-semibold">Unternehmen</h1>
+              <HelpButton title="Unternehmen & Kontakte">
+                <p>Hier pflegst Du alle beteiligten Firmen und Gewerke.</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li><b>Neu</b>: Unternehmen anlegen</li>
+                  <li><b>Suchen</b>: Name, Kürzel oder Kontaktperson</li>
+                  <li><b>Standard-CC</b>: Filter für Firmen, die bei Mails immer auf CC stehen</li>
+                  <li>Tippen öffnet das Detailprofil (Telefon, Mail, Notizen)</li>
+                </ul>
+              </HelpButton>
+            </div>
             <p className="text-xs text-muted-foreground">{filtered.length}{filtered.length !== companies.length ? ` / ${companies.length}` : ''} Kontakte</p>
           </div>
           <Button size="sm" onClick={() => createCompany.mutate()}><Plus className="h-4 w-4 mr-1" /> Neu</Button>
