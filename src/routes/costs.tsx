@@ -47,6 +47,8 @@ function CostsPage() {
     final: sum('final_price'),
   };
 
+  const [showDetails, setShowDetails] = useState(true);
+
   return (
     <div>
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b px-4 py-3">
@@ -60,10 +62,27 @@ function CostsPage() {
             <tr className="text-[10px] uppercase tracking-wide text-muted-foreground border-b">
               <th className="text-left font-normal px-4 py-2">Aufgabe</th>
               <th className="text-left font-normal px-2 py-2">Unternehmen</th>
-              <th className="text-right font-normal px-2 py-2">Aktuell</th>
-              <th className="text-right font-normal px-2 py-2">Geplant</th>
-              <th className="text-right font-normal px-2 py-2">Angebot</th>
-              <th className="text-right font-normal px-4 py-2">Final</th>
+              <th className="text-right font-normal px-2 py-2">
+                <div className="inline-flex items-center gap-1">
+                  <span>Aktuell</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowDetails((v) => !v)}
+                    className="inline-flex h-5 w-5 items-center justify-center rounded hover:bg-muted text-muted-foreground"
+                    aria-label={showDetails ? 'Detailspalten ausblenden' : 'Detailspalten einblenden'}
+                    title={showDetails ? 'Detailspalten ausblenden' : 'Detailspalten einblenden'}
+                  >
+                    {showDetails ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              </th>
+              {showDetails && (
+                <>
+                  <th className="text-right font-normal px-2 py-2">Geplant</th>
+                  <th className="text-right font-normal px-2 py-2">Angebot</th>
+                  <th className="text-right font-normal px-4 py-2">Final</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -76,14 +95,18 @@ function CostsPage() {
                   </td>
                   <td className="px-2 py-2">{c ? <CompanyBadge company={c} /> : <span className="text-muted-foreground">—</span>}</td>
                   <td className="px-2 py-2 text-right tabular-nums font-medium">{fmt(currentOf(t))}</td>
-                  <td className="px-2 py-2 text-right tabular-nums">{fmt(t.planned_cost)}</td>
-                  <td className="px-2 py-2 text-right tabular-nums">{fmt(t.offered_price)}</td>
-                  <td className="px-4 py-2 text-right tabular-nums">{fmt(t.final_price)}</td>
+                  {showDetails && (
+                    <>
+                      <td className="px-2 py-2 text-right tabular-nums">{fmt(t.planned_cost)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums">{fmt(t.offered_price)}</td>
+                      <td className="px-4 py-2 text-right tabular-nums">{fmt(t.final_price)}</td>
+                    </>
+                  )}
                 </tr>
               );
             })}
             {rows.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Keine Aufgaben mit Kosten.</td></tr>
+              <tr><td colSpan={showDetails ? 6 : 3} className="px-4 py-8 text-center text-muted-foreground">Keine Aufgaben mit Kosten.</td></tr>
             )}
           </tbody>
           {rows.length > 0 && (
@@ -91,9 +114,13 @@ function CostsPage() {
               <tr className="border-t-2 font-semibold bg-muted/40">
                 <td className="px-4 py-2" colSpan={2}>Summe</td>
                 <td className="px-2 py-2 text-right tabular-nums">{fmt(totals.current)}</td>
-                <td className="px-2 py-2 text-right tabular-nums">{fmt(totals.planned)}</td>
-                <td className="px-2 py-2 text-right tabular-nums">{fmt(totals.offered)}</td>
-                <td className="px-4 py-2 text-right tabular-nums">{fmt(totals.final)}</td>
+                {showDetails && (
+                  <>
+                    <td className="px-2 py-2 text-right tabular-nums">{fmt(totals.planned)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums">{fmt(totals.offered)}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">{fmt(totals.final)}</td>
+                  </>
+                )}
               </tr>
             </tfoot>
           )}
