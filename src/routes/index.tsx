@@ -352,7 +352,20 @@ function TasksPage() {
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
         <div className="px-4 py-3 flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h1 className="text-lg md:text-xl font-semibold">Bauplanung Leiwen</h1>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-lg md:text-xl font-semibold">Bauplanung Leiwen</h1>
+              <HelpButton title="Aufgabenliste">
+                <p>Hier verwaltest Du alle Aufgaben des Bauprojekts.</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li><b>Tippen</b> auf eine Zeile: Details ein-/ausklappen</li>
+                  <li><b>Tippen</b> auf das Status-Symbol: Status weiterschalten</li>
+                  <li><b>Swipe →</b>: Aufgabe einrücken (Unterpunkt)</li>
+                  <li><b>Swipe ←</b>: Aufgabe ausrücken</li>
+                  <li><b>Lange drücken</b>: Aufgabe verschieben</li>
+                  <li>Oben filtern nach Status, Unternehmen oder Suchbegriff</li>
+                </ul>
+              </HelpButton>
+            </div>
             <p className="text-xs text-muted-foreground">
               {filtered.length}{filterActive ? ` / ${ordered.length}` : ''} Aufgaben ·{' '}
               <span className="md:hidden">Tippen klappt auf · Swipe ⇆ Hierarchie</span>
