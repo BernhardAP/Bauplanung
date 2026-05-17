@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { fetchCompanies } from '@/lib/queries';
 import { Button } from '@/components/ui/button';
 import { CompanyBadge } from '@/components/company-badge';
-import { Plus, Phone, Mail, Search, X } from 'lucide-react';
+import { Plus, Phone, Mail, MapPin, Search, X } from 'lucide-react';
 import { HelpButton } from '@/components/help-button';
+import { makeMapHref } from '@/lib/contact-actions';
 
 export const Route = createFileRoute('/companies/')({
   head: () => ({
@@ -103,6 +104,7 @@ function CompaniesPage() {
               <div className="flex gap-2 text-muted-foreground">
                 {c.telefon && <a href={`tel:${c.telefon.replace(/\s+/g, '')}`} onClick={(e) => e.stopPropagation()}><Phone className="h-4 w-4" /></a>}
                 {c.email && <a href={`mailto:${c.email}`} onClick={(e) => e.stopPropagation()}><Mail className="h-4 w-4" /></a>}
+                {c.adresse && <a href={makeMapHref(c.adresse)!} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}><MapPin className="h-4 w-4" /></a>}
               </div>
             </Link>
           </li>
