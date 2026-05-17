@@ -474,7 +474,7 @@ function TasksPage() {
               onIndent={() => handleIndent(t)}
               onOutdent={() => handleOutdent(t)}
               onAddSubtask={() => handleAddSubtask(t)}
-              onLongPressStart={(x, y) => handleLongPressStart(t.id, x, y)}
+              onStartMove={(x, y) => handleLongPressStart(t.id, x, y)}
             />
           </li>
         ))}
