@@ -267,13 +267,6 @@ function TasksPage() {
     }
   }
 
-  function toggleExpand(id: string) {
-    setExpanded((s) => {
-      const n = new Set(s);
-      if (n.has(id)) n.delete(id); else n.add(id);
-      return n;
-    });
-  }
   function toggleChildren(id: string) {
     setCollapsedParents((s) => {
       const n = new Set(s);
