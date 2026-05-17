@@ -4,6 +4,7 @@ import { fetchTasks, fetchCompanies } from '@/lib/queries';
 import { CompanyBadge } from '@/components/company-badge';
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { HelpButton } from '@/components/help-button';
 
 export const Route = createFileRoute('/costs')({
   head: () => ({
