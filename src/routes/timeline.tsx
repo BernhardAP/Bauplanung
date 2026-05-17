@@ -9,6 +9,7 @@ import type { Task, TaskStatus } from '@/lib/types';
 import { STATUS_ORDER, STATUS_LABEL } from '@/lib/types';
 import { useStatusMeta } from '@/lib/use-status-meta';
 import { Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { HelpButton } from '@/components/help-button';
 
 export const Route = createFileRoute('/timeline')({
   head: () => ({
