@@ -89,6 +89,7 @@ function CostsPage() {
             <tfoot>
               <tr className="border-t-2 font-semibold bg-muted/40">
                 <td className="px-4 py-2" colSpan={2}>Summe</td>
+                <td className="px-2 py-2 text-right tabular-nums">{fmt(totals.current)}</td>
                 <td className="px-2 py-2 text-right tabular-nums">{fmt(totals.planned)}</td>
                 <td className="px-2 py-2 text-right tabular-nums">{fmt(totals.offered)}</td>
                 <td className="px-4 py-2 text-right tabular-nums">{fmt(totals.final)}</td>
