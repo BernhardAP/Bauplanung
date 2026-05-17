@@ -141,6 +141,7 @@ export function TaskRow({
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0" aria-label="Status">
               <StatusIcon status={task.status} className="h-5 w-5" />
             </button>
+            {task.depth > 0 && <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" aria-hidden />}
             <button onClick={onRowClick} className="flex-1 text-left flex items-center gap-2 min-w-0">
               <span className={`flex-1 truncate text-sm ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
                 {task.title || <span className="italic text-muted-foreground">(ohne Titel)</span>}
