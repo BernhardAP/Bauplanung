@@ -43,7 +43,6 @@ function TasksPage() {
   });
 
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [collapsedParents, setCollapsedParents] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<Set<TaskStatus>>(new Set());
@@ -172,48 +171,32 @@ function TasksPage() {
     }
   }
 
-  // ----- Long-press drag-to-reparent -----
-  type DragState = { id: string; x: number; y: number; targetId: string | null };
-  const [dragState, setDragState] = useState<DragState | null>(null);
-  const dragStateRef = useRef<DragState | null>(null);
-  useEffect(() => { dragStateRef.current = dragState; }, [dragState]);
-
-  const childrenByParentId = useMemo(() => {
-    const m = new Map<string | null, Task[]>();
-    for (const t of tasks) {
-      const arr = m.get(t.parent_id) ?? [];
-      arr.push(t);
-      m.set(t.parent_id, arr);
-    }
-    return m;
-  }, [tasks]);
-
-  function collectDescendants(id: string): Task[] {
-    const out: Task[] = [];
-    const walk = (pid: string) => {
-      for (const c of childrenByParentId.get(pid) ?? []) { out.push(c); walk(c.id); }
-    };
-    walk(id);
-    return out;
-  }
-
-  async function handleReparent(draggedId: string, newParentId: string) {
+  async function handleReparent(draggedId: string, newParentId: string | null) {
     const dragged = tasks.find((t) => t.id === draggedId);
-    const newParent = tasks.find((t) => t.id === newParentId);
-    if (!dragged || !newParent) return;
+    if (!dragged) return;
     if (draggedId === newParentId) return;
-    const descendants = collectDescendants(draggedId);
-    if (descendants.some((d) => d.id === newParentId)) {
+    const childrenByParentId = new Map<string | null, Task[]>();
+    for (const t of tasks) {
+      const arr = childrenByParentId.get(t.parent_id) ?? [];
+      arr.push(t);
+      childrenByParentId.set(t.parent_id, arr);
+    }
+    const descendants: Task[] = [];
+    const walk = (pid: string) => {
+      for (const c of childrenByParentId.get(pid) ?? []) { descendants.push(c); walk(c.id); }
+    };
+    walk(draggedId);
+    if (newParentId && descendants.some((d) => d.id === newParentId)) {
       toast.error('Aufgabe kann nicht in eigene Unteraufgabe verschoben werden');
       return;
     }
-    const newDepth = newParent.depth + 1;
+    const newParent = newParentId ? tasks.find((t) => t.id === newParentId) ?? null : null;
+    const newDepth = newParent ? newParent.depth + 1 : 0;
     const depthDelta = newDepth - dragged.depth;
     const maxOrder = tasks.reduce(
       (m, t) => (t.parent_id === newParentId ? Math.max(m, t.sort_order) : m),
       0,
     );
-    // capture inverse for undo
     const prevDragged = {
       parent_id: dragged.parent_id,
       depth: dragged.depth,
@@ -231,9 +214,11 @@ function TasksPage() {
       const { error: e2 } = await supabase.from('tasks').update({ depth: d.depth + depthDelta }).eq('id', d.id);
       if (e2) { toast.error(e2.message); return; }
     }
-    setCollapsedParents((s) => { const n = new Set(s); n.delete(newParentId); return n; });
+    if (newParentId) {
+      setCollapsedParents((s) => { const n = new Set(s); n.delete(newParentId); return n; });
+    }
     qc.invalidateQueries({ queryKey: ['tasks'] });
-    toast.success(`Verschoben unter „${newParent.title || 'Aufgabe'}"`);
+    toast.success(newParent ? `Verschoben unter „${newParent.title || 'Aufgabe'}"` : 'Auf oberste Ebene verschoben');
     undoStore.push(`Verschoben: „${dragged.title || 'Aufgabe'}"`, async () => {
       const { error: u1 } = await supabase.from('tasks').update(prevDragged).eq('id', draggedId);
       if (u1) throw u1;
@@ -244,48 +229,6 @@ function TasksPage() {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     });
   }
-
-  function handleLongPressStart(taskId: string, x: number, y: number) {
-    setDragState({ id: taskId, x, y, targetId: null });
-  }
-
-  useEffect(() => {
-    if (!dragState) return;
-    const findTarget = (clientX: number, clientY: number): string | null => {
-      const el = document.elementFromPoint(clientX, clientY);
-      const row = el?.closest('[data-task-id]') as HTMLElement | null;
-      const id = row?.getAttribute('data-task-id') ?? null;
-      if (!id || id === dragState.id) return null;
-      // forbid descendants
-      const descIds = new Set(collectDescendants(dragState.id).map((d) => d.id));
-      if (descIds.has(id)) return null;
-      return id;
-    };
-    const onMove = (e: PointerEvent) => {
-      e.preventDefault();
-      const targetId = findTarget(e.clientX, e.clientY);
-      setDragState((s) => (s ? { ...s, x: e.clientX, y: e.clientY, targetId } : s));
-    };
-    const onUp = () => {
-      const s = dragStateRef.current;
-      if (s?.targetId) handleReparent(s.id, s.targetId);
-      setDragState(null);
-    };
-    window.addEventListener('pointermove', onMove, { passive: false });
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
-    const prevTouchAction = document.body.style.touchAction;
-    document.body.style.touchAction = 'none';
-    return () => {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
-      document.body.style.touchAction = prevTouchAction;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dragState?.id]);
-
-  const draggedTask = dragState ? tasks.find((t) => t.id === dragState.id) ?? null : null;
 
   function handleIndent(task: Task) {
     const sameParent = tasks.filter((t) => t.parent_id === task.parent_id).sort((a, b) => a.sort_order - b.sort_order);
@@ -324,13 +267,6 @@ function TasksPage() {
     }
   }
 
-  function toggleExpand(id: string) {
-    setExpanded((s) => {
-      const n = new Set(s);
-      if (n.has(id)) n.delete(id); else n.add(id);
-      return n;
-    });
-  }
   function toggleChildren(id: string) {
     setCollapsedParents((s) => {
       const n = new Set(s);
@@ -357,16 +293,16 @@ function TasksPage() {
               <HelpButton title="Aufgabenliste">
                 <p>Hier verwaltest Du alle Aufgaben des Bauprojekts.</p>
                 <ul className="list-disc pl-4 space-y-1">
-                  <li><b>Tippen</b> auf eine Zeile: Details ein-/ausklappen</li>
+                  <li><b>Tippen</b> auf eine Zeile: Detailansicht öffnen (dort gibt es alle Aktionen)</li>
                   <li><b>Tippen</b> auf das Status-Symbol: Status weiterschalten</li>
-                  <li><b>Lange drücken</b> auf eine Zeile: Aktionsmenü („rumhängen") mit Einrücken, Ausrücken, Verschieben, Unteraufgabe</li>
+                  <li><b>Pfeil</b> rechts an Eltern-Aufgaben: Unteraufgaben ein-/ausblenden</li>
                   <li>Oben filtern nach Status, Unternehmen oder Suchbegriff</li>
                 </ul>
               </HelpButton>
             </div>
             <p className="text-xs text-muted-foreground">
               {filtered.length}{filterActive ? ` / ${ordered.length}` : ''} Aufgaben ·{' '}
-              <span>Lange drücken für Aktionen</span>
+              <span>Aufgabe antippen für Details &amp; Aktionen</span>
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -458,20 +394,12 @@ function TasksPage() {
             <TaskRow
               task={t}
               company={t.company_id ? companyById[t.company_id] ?? null : null}
-              expanded={expanded.has(t.id)}
               hasChildren={(childrenByParent.get(t.id) ?? 0) > 0}
               childrenCollapsed={collapsedParents.has(t.id)}
               attachmentCount={attCount.get(t.id) ?? 0}
-              isDropTarget={dragState?.targetId === t.id}
-              dragLocked={!!dragState}
-              onToggleExpand={() => toggleExpand(t.id)}
               onToggleChildren={() => toggleChildren(t.id)}
               onEdit={() => setEditTaskId(t.id)}
               onCycleStatus={() => applyUpdate(t.id, { status: nextStatus(t.status, statusMeta.order) }, `Status: „${t.title || 'Aufgabe'}"`)}
-              onIndent={() => handleIndent(t)}
-              onOutdent={() => handleOutdent(t)}
-              onAddSubtask={() => handleAddSubtask(t)}
-              onStartMove={(x, y) => handleLongPressStart(t.id, x, y)}
             />
           </li>
         ))}
@@ -484,23 +412,13 @@ function TasksPage() {
         task={editTask}
         open={!!editTaskId}
         onOpenChange={(o) => { if (!o) setEditTaskId(null); }}
+        allTasks={tasks}
+        onIndent={(t) => handleIndent(t)}
+        onOutdent={(t) => handleOutdent(t)}
+        onAddSubtask={(t) => handleAddSubtask(t)}
+        onReparent={(t, newParentId) => handleReparent(t.id, newParentId)}
       />
-
-      {dragState && draggedTask && (
-        <div
-          className="pointer-events-none fixed z-50 px-3 py-2 rounded-md border bg-card shadow-lg text-sm max-w-[80vw] truncate"
-          style={{
-            left: dragState.x,
-            top: dragState.y,
-            transform: 'translate(-50%, -120%)',
-          }}
-        >
-          {draggedTask.title || '(ohne Titel)'}
-          {dragState.targetId && (
-            <span className="ml-2 text-xs text-primary">→ Unteraufgabe</span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
+

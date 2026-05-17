@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Phone, Mail, Link2, Trash2, X, ExternalLink, Inbox } from 'lucide-react';
+import { Phone, Mail, Link2, Trash2, X, ExternalLink, Inbox, IndentIncrease, IndentDecrease, Plus, Move } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAttachments, fetchCompanies } from '@/lib/queries';
@@ -23,9 +23,14 @@ interface Props {
   task: Task | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  allTasks?: Task[];
+  onIndent?: (task: Task) => void;
+  onOutdent?: (task: Task) => void;
+  onAddSubtask?: (task: Task) => void;
+  onReparent?: (task: Task, newParentId: string | null) => void;
 }
 
-export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
+export function TaskDetailSheet({ task, open, onOpenChange, allTasks = [], onIndent, onOutdent, onAddSubtask, onReparent }: Props) {
   const statusMeta = useStatusMeta();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Task | null>(null);
@@ -339,6 +344,67 @@ export function TaskDetailSheet({ task, open, onOpenChange }: Props) {
                   <a href={mailHref ?? '#'}><Mail className="h-4 w-4 mr-1" /> E-Mail</a>
                 </Button>
               </div>
+            </div>
+          )}
+
+          {(onIndent || onOutdent || onAddSubtask || onReparent) && task && (
+            <div className="space-y-2 border-t pt-3">
+              <div className="text-xs font-medium text-muted-foreground">Aktionen</div>
+              <div className="flex flex-wrap gap-2">
+                {onOutdent && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => { onOutdent(task); onOpenChange(false); }}>
+                    <IndentDecrease className="h-4 w-4 mr-1" /> Ausrücken
+                  </Button>
+                )}
+                {onIndent && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => { onIndent(task); onOpenChange(false); }}>
+                    <IndentIncrease className="h-4 w-4 mr-1" /> Einrücken
+                  </Button>
+                )}
+                {onAddSubtask && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => { onAddSubtask(task); onOpenChange(false); }}>
+                    <Plus className="h-4 w-4 mr-1" /> Unteraufgabe
+                  </Button>
+                )}
+              </div>
+              {onReparent && (() => {
+                const forbidden = new Set<string>([task.id]);
+                const walk = (pid: string) => {
+                  for (const c of allTasks.filter((t) => t.parent_id === pid)) {
+                    forbidden.add(c.id);
+                    walk(c.id);
+                  }
+                };
+                walk(task.id);
+                const candidates = allTasks
+                  .filter((t) => !forbidden.has(t.id))
+                  .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                const currentVal = task.parent_id ?? 'root';
+                return (
+                  <div>
+                    <Label className="text-xs flex items-center gap-1"><Move className="h-3 w-3" /> Verschieben unter</Label>
+                    <Select
+                      value={currentVal}
+                      onValueChange={(v) => {
+                        const newParentId = v === 'root' ? null : v;
+                        if (newParentId === (task.parent_id ?? null)) return;
+                        onReparent(task, newParentId);
+                        onOpenChange(false);
+                      }}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="root">— oberste Ebene —</SelectItem>
+                        {candidates.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {'· '.repeat(t.depth)}{t.title || '(ohne Titel)'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
