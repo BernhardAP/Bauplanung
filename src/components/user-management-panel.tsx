@@ -82,7 +82,8 @@ export function UserManagementPanel() {
 ich lade Dich zur gemeinsamen Bauplanung Leiwen ein. Über die App können wir Aufgaben, Termine, Kosten und Unternehmen rund um das Bauprojekt zentral verwalten.
 
 So kommst Du rein:
-1. Öffne die App: https://idea-nest-mate.lovable.app
+1. Öffne die App unter folgendem Link:
+https://idea-nest-mate.lovable.app
 2. Melde Dich mit dieser E-Mail-Adresse an: ${row.email}
 3. Beim ersten Login vergibst Du Dein eigenes Passwort.
 
