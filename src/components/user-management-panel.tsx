@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Trash2 } from 'lucide-react';
+import { Loader2, Mail, Send, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { inviteUser, listAllowedEmails, removeAllowedEmail } from '@/lib/users.functions';
 import { ADMIN_EMAIL } from '@/lib/use-current-user';
