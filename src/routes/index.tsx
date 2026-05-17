@@ -43,7 +43,6 @@ function TasksPage() {
   });
 
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [collapsedParents, setCollapsedParents] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<Set<TaskStatus>>(new Set());
