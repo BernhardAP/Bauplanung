@@ -59,6 +59,7 @@ function CostsPage() {
             <tr className="text-[10px] uppercase tracking-wide text-muted-foreground border-b">
               <th className="text-left font-normal px-4 py-2">Aufgabe</th>
               <th className="text-left font-normal px-2 py-2">Unternehmen</th>
+              <th className="text-right font-normal px-2 py-2">Aktuell</th>
               <th className="text-right font-normal px-2 py-2">Geplant</th>
               <th className="text-right font-normal px-2 py-2">Angebot</th>
               <th className="text-right font-normal px-4 py-2">Final</th>
@@ -73,6 +74,7 @@ function CostsPage() {
                     <Link to="/" className="hover:underline">{t.title || '(ohne Titel)'}</Link>
                   </td>
                   <td className="px-2 py-2">{c ? <CompanyBadge company={c} /> : <span className="text-muted-foreground">—</span>}</td>
+                  <td className="px-2 py-2 text-right tabular-nums font-medium">{fmt(currentOf(t))}</td>
                   <td className="px-2 py-2 text-right tabular-nums">{fmt(t.planned_cost)}</td>
                   <td className="px-2 py-2 text-right tabular-nums">{fmt(t.offered_price)}</td>
                   <td className="px-4 py-2 text-right tabular-nums">{fmt(t.final_price)}</td>
@@ -80,7 +82,7 @@ function CostsPage() {
               );
             })}
             {rows.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Keine Aufgaben mit Kosten.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Keine Aufgaben mit Kosten.</td></tr>
             )}
           </tbody>
           {rows.length > 0 && (
