@@ -75,9 +75,9 @@ export function TaskRow({
   const handlePointerDown = (e: React.PointerEvent) => {
     if (dragLocked) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    // Don't trigger long-press from buttons (status icon, expand, etc.)
+    // Don't trigger long-press from small controls, but allow it on the row title button.
     const tgt = e.target as HTMLElement;
-    if (tgt.closest('button, a, input')) return;
+    if (tgt.closest('[data-long-press-ignore], a, input, textarea, select')) return;
     pressFired.current = false;
     pressStart.current = { x: e.clientX, y: e.clientY };
     pressTimer.current = window.setTimeout(() => {
@@ -122,7 +122,7 @@ export function TaskRow({
       ref={rootRef}
       className="relative select-none"
       data-task-id={task.id}
-      style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
+      style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', touchAction: 'pan-y' }}
       onContextMenu={(e) => e.preventDefault()}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -144,7 +144,7 @@ export function TaskRow({
 
           {/* Mobile compact row */}
           <div className="flex md:hidden items-center gap-2 py-2.5 pr-2" style={{ paddingLeft: 12 + task.depth * 16 }}>
-            <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0" aria-label="Status">
+            <button data-long-press-ignore onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0" aria-label="Status">
               <StatusIcon status={task.status} className="h-5 w-5" />
             </button>
             {task.depth > 0 && <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" aria-hidden />}
@@ -159,6 +159,7 @@ export function TaskRow({
               )}
             </button>
             <button
+              data-long-press-ignore
               onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
               className="p-1.5 -m-1 shrink-0 text-muted-foreground"
               aria-label="Details"
@@ -175,7 +176,7 @@ export function TaskRow({
               gridTemplateColumns: 'auto minmax(0, 1fr) 180px 160px 90px auto',
             }}
           >
-            <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0 mt-0.5" title={sm.label}>
+            <button data-long-press-ignore onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0 mt-0.5" title={sm.label}>
               <StatusIcon status={task.status} className="h-5 w-5" color={sm.color ?? undefined} label={sm.label} />
             </button>
             <button onClick={onRowClick} className="text-left min-w-0 flex items-start gap-1.5">
@@ -203,7 +204,7 @@ export function TaskRow({
               {dateText ? <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" /> {dateText}</span> : <span className="text-muted-foreground/60">—</span>}
             </div>
             <div className="text-xs text-muted-foreground">{sm.label}</div>
-            <button onClick={onEdit} className="p-1 -m-1 text-muted-foreground hover:text-foreground" aria-label="Bearbeiten">
+            <button data-long-press-ignore onClick={onEdit} className="p-1 -m-1 text-muted-foreground hover:text-foreground" aria-label="Bearbeiten">
               <Pencil className="h-4 w-4" />
             </button>
           </div>
@@ -225,6 +226,7 @@ export function TaskRow({
               <ActionChip icon={<Plus className="h-3.5 w-3.5" />} label="Unteraufgabe" onClick={() => { onAddSubtask(); closeMenu(); }} />
               <ActionChip icon={<Pencil className="h-3.5 w-3.5" />} label="Bearbeiten" onClick={() => { onEdit(); closeMenu(); }} />
               <button
+                data-long-press-ignore
                 onClick={closeMenu}
                 className="ml-auto p-1 text-muted-foreground hover:text-foreground"
                 aria-label="Menü schließen"
@@ -290,12 +292,14 @@ export function TaskRow({
               )}
               <div className="mt-1 flex items-center gap-2">
                 <button
+                  data-long-press-ignore
                   onClick={onEdit}
                   className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border bg-background hover:bg-accent"
                 >
                   <Pencil className="h-3.5 w-3.5" /> Bearbeiten
                 </button>
                 <button
+                  data-long-press-ignore
                   onClick={(e) => { e.stopPropagation(); onAddSubtask(); }}
                   className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border bg-background hover:bg-accent"
                 >
@@ -320,6 +324,7 @@ function ActionChip({
 }) {
   return (
     <button
+      data-long-press-ignore
       onClick={(e) => { e.stopPropagation(); onClick?.(e); }}
       onPointerDown={onPointerDown}
       className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md border bg-background hover:bg-accent active:scale-95 transition"
