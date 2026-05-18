@@ -6,6 +6,8 @@ import type { Task, TaskStatus, Company } from '@/lib/types';
 import { STATUS_ORDER } from '@/lib/types';
 import { useStatusMeta } from '@/lib/use-status-meta';
 
+export type DropPosition = 'before' | 'after' | 'child';
+
 interface Props {
   task: Task;
   company: Company | null;
@@ -15,6 +17,10 @@ interface Props {
   onToggleChildren?: () => void;
   onEdit: () => void;
   onCycleStatus: () => void;
+  onDragStartTask?: (id: string) => void;
+  onDragEndTask?: () => void;
+  onDropOnTask?: (draggedId: string, targetId: string, position: DropPosition) => void;
+  draggingId?: string | null;
 }
 
 function fmtDate(s: string | null) {
