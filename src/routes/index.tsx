@@ -424,6 +424,7 @@ function TasksPage() {
           >
             <Plus className="h-4 w-4" />
           </button>
+          <span className="w-4" />
           <span>Aufgabe</span>
           <span>Unternehmen</span>
           <span>Zeitraum</span>
