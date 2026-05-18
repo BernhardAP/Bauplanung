@@ -47,6 +47,8 @@ function TasksPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<Set<TaskStatus>>(new Set());
   const [companyFilter, setCompanyFilter] = useState<Set<string>>(new Set());
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [rootDropHover, setRootDropHover] = useState(false);
 
   const ordered = useMemo(() => flattenTree(tasks), [tasks]);
   const companyById = useMemo(() => Object.fromEntries(companies.map((c) => [c.id, c])), [companies]);
