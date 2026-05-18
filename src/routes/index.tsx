@@ -68,6 +68,7 @@ function TasksPage() {
     dropPosition: DropPosition | null;
     rootDrop: boolean;
   } | null>(null);
+  const pointerDragRef = useRef<typeof pointerDrag>(null);
 
   const ordered = useMemo(() => flattenTree(tasks), [tasks]);
   const companyById = useMemo(() => Object.fromEntries(companies.map((c) => [c.id, c])), [companies]);
@@ -296,6 +297,98 @@ function TasksPage() {
       void handleMove(draggedId, target.parent_id, next ? next.id : null);
     }
   }
+
+  function computePointerDropPosition(row: HTMLElement, clientY: number): DropPosition {
+    const rect = row.getBoundingClientRect();
+    const y = clientY - rect.top;
+    if (y < rect.height * 0.28) return 'before';
+    if (y > rect.height * 0.72) return 'after';
+    return 'child';
+  }
+
+  function updatePointerDrop(clientX: number, clientY: number) {
+    const current = pointerDragRef.current;
+    if (!current) return;
+    const element = document.elementFromPoint(clientX, clientY);
+    const rootDrop = !!element?.closest('[data-root-drop="true"]');
+    let dropTargetId: string | null = null;
+    let dropPosition: DropPosition | null = null;
+    if (!rootDrop) {
+      const row = element?.closest<HTMLElement>('[data-task-row="true"]');
+      const id = row?.dataset.taskId ?? null;
+      if (row && id && id !== current.id) {
+        dropTargetId = id;
+        dropPosition = computePointerDropPosition(row, clientY);
+      }
+    }
+    const next = { ...current, dropTargetId, dropPosition, rootDrop };
+    pointerDragRef.current = next;
+    setPointerDrag(next);
+    setRootDropHover(rootDrop);
+  }
+
+  function stopPointerListeners() {
+    window.removeEventListener('pointermove', handlePointerMove);
+    window.removeEventListener('pointerup', handlePointerUp);
+    window.removeEventListener('pointercancel', handlePointerCancel);
+  }
+
+  function clearPointerDrag() {
+    document.body.style.userSelect = '';
+    pointerDragRef.current = null;
+    setPointerDrag(null);
+    setDraggingId(null);
+    setRootDropHover(false);
+  }
+
+  function handlePointerMove(e: PointerEvent) {
+    const current = pointerDragRef.current;
+    if (!current || e.pointerId !== current.pointerId) return;
+    e.preventDefault();
+    updatePointerDrop(e.clientX, e.clientY);
+  }
+
+  function handlePointerUp(e: PointerEvent) {
+    const current = pointerDragRef.current;
+    if (!current || e.pointerId !== current.pointerId) return;
+    e.preventDefault();
+    updatePointerDrop(e.clientX, e.clientY);
+    const latest = pointerDragRef.current;
+    stopPointerListeners();
+    clearPointerDrag();
+    if (!latest) return;
+    if (latest.rootDrop) {
+      void handleMove(latest.id, null, null);
+    } else if (latest.dropTargetId && latest.dropPosition) {
+      handleDropOnTask(latest.id, latest.dropTargetId, latest.dropPosition);
+    }
+  }
+
+  function handlePointerCancel(e: PointerEvent) {
+    const current = pointerDragRef.current;
+    if (!current || e.pointerId !== current.pointerId) return;
+    stopPointerListeners();
+    clearPointerDrag();
+  }
+
+  function handlePointerDragStart(id: string, e: React.PointerEvent<HTMLElement>) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const next = { id, pointerId: e.pointerId, dropTargetId: null, dropPosition: null, rootDrop: false };
+    pointerDragRef.current = next;
+    setPointerDrag(next);
+    setDraggingId(id);
+    document.body.style.userSelect = 'none';
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
+    window.addEventListener('pointerup', handlePointerUp, { passive: false });
+    window.addEventListener('pointercancel', handlePointerCancel);
+  }
+
+  useEffect(() => () => {
+    stopPointerListeners();
+    document.body.style.userSelect = '';
+  }, []);
 
 
   async function handleCreateAndEdit() {
