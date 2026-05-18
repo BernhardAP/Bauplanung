@@ -59,14 +59,6 @@ export function TaskRow({
     <div
       className="relative"
       data-task-id={task.id}
-      draggable={!!onDragStartTask}
-      onDragStart={(e) => {
-        if (!onDragStartTask) return;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', task.id);
-        onDragStartTask(task.id);
-      }}
-      onDragEnd={() => { setDropPos(null); onDragEndTask?.(); }}
       onDragOver={(e) => {
         if (!onDropOnTask || !dragActive || isDraggingThis) return;
         e.preventDefault();
@@ -75,7 +67,6 @@ export function TaskRow({
         setDropPos((p) => (p === pos ? p : pos));
       }}
       onDragLeave={(e) => {
-        // only clear if leaving the row entirely
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropPos(null);
       }}
       onDrop={(e) => {
@@ -102,7 +93,19 @@ export function TaskRow({
 
           {/* Mobile compact row */}
           <div className="flex md:hidden items-center gap-2 py-2.5 pr-2" style={{ paddingLeft: 12 + task.depth * 16 }}>
-            <span className="shrink-0 text-muted-foreground/60 cursor-grab active:cursor-grabbing touch-none" aria-label="Ziehen" title="Ziehen zum Verschieben">
+            <span
+              draggable={!!onDragStartTask}
+              onDragStart={(e) => {
+                if (!onDragStartTask) return;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', task.id);
+                onDragStartTask(task.id);
+              }}
+              onDragEnd={() => { setDropPos(null); onDragEndTask?.(); }}
+              className="shrink-0 text-muted-foreground/60 cursor-grab active:cursor-grabbing touch-none"
+              aria-label="Ziehen"
+              title="Ziehen zum Verschieben"
+            >
               <GripVertical className="h-4 w-4" />
             </span>
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0" aria-label="Status">
@@ -140,7 +143,19 @@ export function TaskRow({
               gridTemplateColumns: 'auto auto minmax(0, 1fr) 180px 160px 90px auto',
             }}
           >
-            <span className="shrink-0 mt-1 text-muted-foreground/50 hover:text-muted-foreground cursor-grab active:cursor-grabbing" title="Ziehen zum Verschieben" aria-label="Ziehen">
+            <span
+              draggable={!!onDragStartTask}
+              onDragStart={(e) => {
+                if (!onDragStartTask) return;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', task.id);
+                onDragStartTask(task.id);
+              }}
+              onDragEnd={() => { setDropPos(null); onDragEndTask?.(); }}
+              className="shrink-0 mt-1 text-muted-foreground/50 hover:text-muted-foreground cursor-grab active:cursor-grabbing"
+              title="Ziehen zum Verschieben"
+              aria-label="Ziehen"
+            >
               <GripVertical className="h-4 w-4" />
             </span>
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0 mt-0.5" title={sm.label}>
