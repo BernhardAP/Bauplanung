@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCompanies, fetchTasks, flattenTree } from '@/lib/queries';
@@ -371,7 +371,7 @@ function TasksPage() {
     clearPointerDrag();
   }
 
-  function handlePointerDragStart(id: string, e: React.PointerEvent<HTMLElement>) {
+  function handlePointerDragStart(id: string, e: ReactPointerEvent<HTMLElement>) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
@@ -535,6 +535,7 @@ function TasksPage() {
 
       {draggingId && (
         <div
+          data-root-drop="true"
           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setRootDropHover(true); }}
           onDragLeave={() => setRootDropHover(false)}
           onDrop={(e) => {
@@ -564,6 +565,8 @@ function TasksPage() {
               draggingId={draggingId}
               onDragStartTask={(id) => setDraggingId(id)}
               onDragEndTask={() => { setDraggingId(null); setRootDropHover(false); }}
+              onPointerDragStartTask={handlePointerDragStart}
+              pointerDropPosition={pointerDrag?.dropTargetId === t.id ? pointerDrag.dropPosition : null}
               onDropOnTask={handleDropOnTask}
             />
           </li>
