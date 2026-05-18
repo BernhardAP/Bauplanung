@@ -414,7 +414,7 @@ function TasksPage() {
         {/* Desktop column headers */}
         <div
           className="hidden md:grid items-center gap-3 px-4 pb-2 text-[10px] uppercase tracking-wide text-muted-foreground border-t pt-2"
-          style={{ gridTemplateColumns: 'auto minmax(0, 1fr) 180px 160px 90px auto', paddingLeft: 16 }}
+          style={{ gridTemplateColumns: 'auto auto minmax(0, 1fr) 180px 160px 90px auto', paddingLeft: 16 }}
         >
           <button
             onClick={handleCreateAndEdit}
