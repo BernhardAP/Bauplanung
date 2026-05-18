@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Phone, Mail, Link2, Trash2, X, ExternalLink, Inbox, IndentIncrease, IndentDecrease, Plus, Move } from 'lucide-react';
+import { Phone, Mail, Link2, Trash2, X, ExternalLink, Inbox, Plus } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAttachments, fetchCompanies } from '@/lib/queries';
