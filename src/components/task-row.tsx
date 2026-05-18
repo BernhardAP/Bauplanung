@@ -93,7 +93,19 @@ export function TaskRow({
 
           {/* Mobile compact row */}
           <div className="flex md:hidden items-center gap-2 py-2.5 pr-2" style={{ paddingLeft: 12 + task.depth * 16 }}>
-            <span className="shrink-0 text-muted-foreground/60 cursor-grab active:cursor-grabbing touch-none" aria-label="Ziehen" title="Ziehen zum Verschieben">
+            <span
+              draggable={!!onDragStartTask}
+              onDragStart={(e) => {
+                if (!onDragStartTask) return;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', task.id);
+                onDragStartTask(task.id);
+              }}
+              onDragEnd={() => { setDropPos(null); onDragEndTask?.(); }}
+              className="shrink-0 text-muted-foreground/60 cursor-grab active:cursor-grabbing touch-none"
+              aria-label="Ziehen"
+              title="Ziehen zum Verschieben"
+            >
               <GripVertical className="h-4 w-4" />
             </span>
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0" aria-label="Status">
