@@ -83,8 +83,6 @@ export function TaskRow({
       }}
       style={{ opacity: isDraggingThis ? 0.4 : 1 }}
     >
-      {dropPos === 'before' && <div className="absolute left-0 right-0 -top-px h-0.5 bg-primary z-10 pointer-events-none" />}
-      {dropPos === 'after' && <div className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary z-10 pointer-events-none" />}
       {effectiveDropPos === 'before' && <div className="absolute left-0 right-0 -top-px h-0.5 bg-primary z-10 pointer-events-none" />}
       {effectiveDropPos === 'after' && <div className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary z-10 pointer-events-none" />}
       <div className={`border-b bg-card ${effectiveDropPos === 'child' ? 'ring-2 ring-inset ring-primary/60' : ''}`}>
@@ -108,6 +106,7 @@ export function TaskRow({
                 onDragStartTask(task.id);
               }}
               onDragEnd={() => { setDropPos(null); onDragEndTask?.(); }}
+              onPointerDown={(e) => onPointerDragStartTask?.(task.id, e)}
               className="shrink-0 text-muted-foreground/60 cursor-grab active:cursor-grabbing touch-none"
               aria-label="Ziehen"
               title="Ziehen zum Verschieben"
@@ -158,6 +157,7 @@ export function TaskRow({
                 onDragStartTask(task.id);
               }}
               onDragEnd={() => { setDropPos(null); onDragEndTask?.(); }}
+              onPointerDown={(e) => onPointerDragStartTask?.(task.id, e)}
               className="shrink-0 mt-1 text-muted-foreground/50 hover:text-muted-foreground cursor-grab active:cursor-grabbing"
               title="Ziehen zum Verschieben"
               aria-label="Ziehen"
