@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCompanies, fetchTasks, flattenTree } from '@/lib/queries';
-import { TaskRow, NewTaskRow, nextStatus } from '@/components/task-row';
+import { TaskRow, nextStatus } from '@/components/task-row';
 import { TaskDetailSheet } from '@/components/task-detail-sheet';
 import { CompanyBadge } from '@/components/company-badge';
 import { StatusIcon } from '@/lib/status-icon';
