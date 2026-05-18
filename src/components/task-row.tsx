@@ -59,14 +59,6 @@ export function TaskRow({
     <div
       className="relative"
       data-task-id={task.id}
-      draggable={!!onDragStartTask}
-      onDragStart={(e) => {
-        if (!onDragStartTask) return;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', task.id);
-        onDragStartTask(task.id);
-      }}
-      onDragEnd={() => { setDropPos(null); onDragEndTask?.(); }}
       onDragOver={(e) => {
         if (!onDropOnTask || !dragActive || isDraggingThis) return;
         e.preventDefault();
@@ -75,7 +67,6 @@ export function TaskRow({
         setDropPos((p) => (p === pos ? p : pos));
       }}
       onDragLeave={(e) => {
-        // only clear if leaving the row entirely
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropPos(null);
       }}
       onDrop={(e) => {
