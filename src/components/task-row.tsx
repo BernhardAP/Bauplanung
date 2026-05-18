@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ChevronRight, Calendar, FileText, Pencil, Paperclip, Plus, CornerDownRight } from 'lucide-react';
+import { ChevronRight, Calendar, FileText, Pencil, Paperclip, Plus, CornerDownRight, GripVertical } from 'lucide-react';
 import { StatusIcon } from '@/lib/status-icon';
 import { CompanyBadge } from '@/components/company-badge';
 import type { Task, TaskStatus, Company } from '@/lib/types';
