@@ -318,34 +318,6 @@ export function TaskDetailSheet({ task, open, onOpenChange, allTasks = [], onInd
             onSaved={(item) => addLink.mutateAsync({ name: item.name, webUrl: item.webUrl, mimeType: item.mimeType, kind: 'email' })}
           />
 
-          {company && (
-            <div className="space-y-2 border-t pt-3">
-              <div className="text-xs text-muted-foreground">{company.name}{company.kontaktperson ? ` · ${company.kontaktperson}` : ''}</div>
-              {companies.filter((c) => c.id !== company.id && c.email).length > 0 && (
-                <div>
-                  <div className="text-xs mb-1">Weitere CC (Standard: Hoffmann immer dabei)</div>
-                  <div className="flex flex-wrap gap-2">
-                    {companies.filter((c) => c.id !== company.id && c.email && !c.is_default_cc).map((c) => (
-                      <label key={c.id} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border">
-                        <Checkbox checked={extraCc.includes(c.email!)} onCheckedChange={(v) => {
-                          setExtraCc((cur) => v ? [...cur, c.email!] : cur.filter((e) => e !== c.email));
-                        }} />
-                        {c.kuerzel}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="flex gap-2">
-                <Button asChild className="flex-1" disabled={!telHref}>
-                  <a href={telHref ?? '#'}><Phone className="h-4 w-4 mr-1" /> Anrufen</a>
-                </Button>
-                <Button asChild variant="secondary" className="flex-1" disabled={!mailHref}>
-                  <a href={mailHref ?? '#'}><Mail className="h-4 w-4 mr-1" /> E-Mail</a>
-                </Button>
-              </div>
-            </div>
-          )}
 
           {(onIndent || onOutdent || onAddSubtask || onReparent) && task && (
             <div className="space-y-2 border-t pt-3">
