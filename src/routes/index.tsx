@@ -171,10 +171,11 @@ function TasksPage() {
     }
   }
 
-  async function handleReparent(draggedId: string, newParentId: string | null) {
+  async function handleMove(draggedId: string, newParentId: string | null, beforeId: string | null) {
     const dragged = tasks.find((t) => t.id === draggedId);
     if (!dragged) return;
-    if (draggedId === newParentId) return;
+    if (draggedId === beforeId) return;
+    // Build descendants
     const childrenByParentId = new Map<string | null, Task[]>();
     for (const t of tasks) {
       const arr = childrenByParentId.get(t.parent_id) ?? [];
@@ -186,33 +187,53 @@ function TasksPage() {
       for (const c of childrenByParentId.get(pid) ?? []) { descendants.push(c); walk(c.id); }
     };
     walk(draggedId);
-    if (newParentId && descendants.some((d) => d.id === newParentId)) {
+    if (newParentId && (newParentId === draggedId || descendants.some((d) => d.id === newParentId))) {
       toast.error('Aufgabe kann nicht in eigene Unteraufgabe verschoben werden');
       return;
     }
     const newParent = newParentId ? tasks.find((t) => t.id === newParentId) ?? null : null;
     const newDepth = newParent ? newParent.depth + 1 : 0;
     const depthDelta = newDepth - dragged.depth;
-    const maxOrder = tasks.reduce(
-      (m, t) => (t.parent_id === newParentId ? Math.max(m, t.sort_order) : m),
-      0,
-    );
-    const prevDragged = {
-      parent_id: dragged.parent_id,
-      depth: dragged.depth,
-      sort_order: dragged.sort_order,
-    };
-    const prevDescendants = descendants.map((d) => ({ id: d.id, depth: d.depth }));
 
+    // Compute new sibling order in target group
+    const siblings = tasks
+      .filter((t) => t.parent_id === newParentId && t.id !== draggedId)
+      .sort((a, b) => a.sort_order - b.sort_order);
+    let insertIdx = beforeId ? siblings.findIndex((s) => s.id === beforeId) : siblings.length;
+    if (insertIdx < 0) insertIdx = siblings.length;
+    const newOrder = [...siblings.slice(0, insertIdx), dragged, ...siblings.slice(insertIdx)];
+
+    // Snapshot for undo
+    const prevDragged = { parent_id: dragged.parent_id, depth: dragged.depth, sort_order: dragged.sort_order };
+    const prevDescendants = descendants.map((d) => ({ id: d.id, depth: d.depth }));
+    const prevSiblingOrders = newOrder
+      .filter((s) => s.id !== draggedId)
+      .map((s) => ({ id: s.id, sort_order: s.sort_order }));
+
+    // Apply: dragged first
+    const draggedOrder = (newOrder.findIndex((s) => s.id === draggedId) + 1) * 1000;
     const { error: e1 } = await supabase.from('tasks').update({
       parent_id: newParentId,
       depth: newDepth,
-      sort_order: maxOrder + 1000,
+      sort_order: draggedOrder,
     }).eq('id', draggedId);
     if (e1) { toast.error(e1.message); return; }
-    for (const d of descendants) {
-      const { error: e2 } = await supabase.from('tasks').update({ depth: d.depth + depthDelta }).eq('id', d.id);
-      if (e2) { toast.error(e2.message); return; }
+    // Reassign sibling sort_orders to keep spacing
+    for (let i = 0; i < newOrder.length; i++) {
+      const s = newOrder[i];
+      if (s.id === draggedId) continue;
+      const target = (i + 1) * 1000;
+      if (s.sort_order !== target) {
+        const { error: es } = await supabase.from('tasks').update({ sort_order: target }).eq('id', s.id);
+        if (es) { toast.error(es.message); return; }
+      }
+    }
+    // Update descendant depths
+    if (depthDelta !== 0) {
+      for (const d of descendants) {
+        const { error: e2 } = await supabase.from('tasks').update({ depth: d.depth + depthDelta }).eq('id', d.id);
+        if (e2) { toast.error(e2.message); return; }
+      }
     }
     if (newParentId) {
       setCollapsedParents((s) => { const n = new Set(s); n.delete(newParentId); return n; });
@@ -222,6 +243,10 @@ function TasksPage() {
     undoStore.push(`Verschoben: „${dragged.title || 'Aufgabe'}"`, async () => {
       const { error: u1 } = await supabase.from('tasks').update(prevDragged).eq('id', draggedId);
       if (u1) throw u1;
+      for (const s of prevSiblingOrders) {
+        const { error: us } = await supabase.from('tasks').update({ sort_order: s.sort_order }).eq('id', s.id);
+        if (us) throw us;
+      }
       for (const d of prevDescendants) {
         const { error: u2 } = await supabase.from('tasks').update({ depth: d.depth }).eq('id', d.id);
         if (u2) throw u2;
@@ -229,6 +254,28 @@ function TasksPage() {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     });
   }
+
+  function handleDropOnTask(draggedId: string, targetId: string, position: 'before' | 'after' | 'child') {
+    const target = tasks.find((t) => t.id === targetId);
+    if (!target) return;
+    if (position === 'child') {
+      // append as last child of target
+      void handleMove(draggedId, targetId, null);
+      return;
+    }
+    // before/after: same parent as target, place before targetId or after
+    const siblings = tasks
+      .filter((t) => t.parent_id === target.parent_id && t.id !== draggedId)
+      .sort((a, b) => a.sort_order - b.sort_order);
+    const idx = siblings.findIndex((s) => s.id === targetId);
+    if (position === 'before') {
+      void handleMove(draggedId, target.parent_id, targetId);
+    } else {
+      const next = siblings[idx + 1] ?? null;
+      void handleMove(draggedId, target.parent_id, next ? next.id : null);
+    }
+  }
+
 
   function handleIndent(task: Task) {
     const sameParent = tasks.filter((t) => t.parent_id === task.parent_id).sort((a, b) => a.sort_order - b.sort_order);
