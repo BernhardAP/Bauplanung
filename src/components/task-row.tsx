@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ChevronRight, Calendar, FileText, Pencil, Paperclip, Plus, CornerDownRight } from 'lucide-react';
+import { ChevronRight, Calendar, FileText, Pencil, Paperclip, Plus, CornerDownRight, GripVertical } from 'lucide-react';
 import { StatusIcon } from '@/lib/status-icon';
 import { CompanyBadge } from '@/components/company-badge';
 import type { Task, TaskStatus, Company } from '@/lib/types';
@@ -102,6 +102,9 @@ export function TaskRow({
 
           {/* Mobile compact row */}
           <div className="flex md:hidden items-center gap-2 py-2.5 pr-2" style={{ paddingLeft: 12 + task.depth * 16 }}>
+            <span className="shrink-0 text-muted-foreground/60 cursor-grab active:cursor-grabbing touch-none" aria-label="Ziehen" title="Ziehen zum Verschieben">
+              <GripVertical className="h-4 w-4" />
+            </span>
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0" aria-label="Status">
               <StatusIcon status={task.status} className="h-5 w-5" />
             </button>
@@ -134,9 +137,12 @@ export function TaskRow({
             className="hidden md:grid items-start gap-3 py-3 pr-4 text-sm"
             style={{
               paddingLeft: 16 + task.depth * 20,
-              gridTemplateColumns: 'auto minmax(0, 1fr) 180px 160px 90px auto',
+              gridTemplateColumns: 'auto auto minmax(0, 1fr) 180px 160px 90px auto',
             }}
           >
+            <span className="shrink-0 mt-1 text-muted-foreground/50 hover:text-muted-foreground cursor-grab active:cursor-grabbing" title="Ziehen zum Verschieben" aria-label="Ziehen">
+              <GripVertical className="h-4 w-4" />
+            </span>
             <button onClick={(e) => { e.stopPropagation(); onCycleStatus(); }} className="p-1 -m-1 shrink-0 mt-0.5" title={sm.label}>
               <StatusIcon status={task.status} className="h-5 w-5" color={sm.color ?? undefined} label={sm.label} />
             </button>
