@@ -46,6 +46,18 @@ function TasksPage() {
   const [collapsedParents, setCollapsedParents] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<Set<TaskStatus>>(new Set());
+  const statusDefaultInit = useRef(false);
+  useEffect(() => {
+    if (statusDefaultInit.current) return;
+    if (!statusMeta.order.length) return;
+    statusDefaultInit.current = true;
+    const def = statusMeta.order.filter((s) => {
+      const m = statusMeta.meta[s];
+      const lbl = (m?.label ?? s).toLowerCase();
+      return s !== 'done' && lbl !== 'erledigt';
+    });
+    setStatusFilter(new Set(def));
+  }, [statusMeta]);
   const [companyFilter, setCompanyFilter] = useState<Set<string>>(new Set());
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [rootDropHover, setRootDropHover] = useState(false);
