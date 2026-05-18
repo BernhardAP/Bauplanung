@@ -24,13 +24,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   allTasks?: Task[];
-  onIndent?: (task: Task) => void;
-  onOutdent?: (task: Task) => void;
   onAddSubtask?: (task: Task) => void;
-  onReparent?: (task: Task, newParentId: string | null) => void;
 }
 
-export function TaskDetailSheet({ task, open, onOpenChange, allTasks = [], onIndent, onOutdent, onAddSubtask, onReparent }: Props) {
+export function TaskDetailSheet({ task, open, onOpenChange, onAddSubtask }: Props) {
   const statusMeta = useStatusMeta();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Task | null>(null);
