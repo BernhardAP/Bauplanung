@@ -424,6 +424,22 @@ function TasksPage() {
         </div>
       </header>
 
+      {draggingId && (
+        <div
+          onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setRootDropHover(true); }}
+          onDragLeave={() => setRootDropHover(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text/plain');
+            setRootDropHover(false);
+            if (id) void handleMove(id, null, null);
+          }}
+          className={`mx-3 my-2 rounded-md border-2 border-dashed px-3 py-2 text-xs text-center transition ${rootDropHover ? 'border-primary bg-primary/10 text-primary' : 'border-muted-foreground/30 text-muted-foreground'}`}
+        >
+          ⤺ Hier ablegen, um auf oberste Ebene zu verschieben
+        </div>
+      )}
+
       <ul className="divide-y">
         {filtered.map((t) => (
           <li key={t.id}>
@@ -436,6 +452,10 @@ function TasksPage() {
               onToggleChildren={() => toggleChildren(t.id)}
               onEdit={() => setEditTaskId(t.id)}
               onCycleStatus={() => applyUpdate(t.id, { status: nextStatus(t.status, statusMeta.order) }, `Status: „${t.title || 'Aufgabe'}"`)}
+              draggingId={draggingId}
+              onDragStartTask={(id) => setDraggingId(id)}
+              onDragEndTask={() => { setDraggingId(null); setRootDropHover(false); }}
+              onDropOnTask={handleDropOnTask}
             />
           </li>
         ))}
@@ -449,10 +469,7 @@ function TasksPage() {
         open={!!editTaskId}
         onOpenChange={(o) => { if (!o) setEditTaskId(null); }}
         allTasks={tasks}
-        onIndent={(t) => handleIndent(t)}
-        onOutdent={(t) => handleOutdent(t)}
         onAddSubtask={(t) => handleAddSubtask(t)}
-        onReparent={(t, newParentId) => handleReparent(t.id, newParentId)}
       />
     </div>
   );
