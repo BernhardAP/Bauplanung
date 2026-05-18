@@ -19,8 +19,10 @@ interface Props {
   onCycleStatus: () => void;
   onDragStartTask?: (id: string) => void;
   onDragEndTask?: () => void;
+  onPointerDragStartTask?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
   onDropOnTask?: (draggedId: string, targetId: string, position: DropPosition) => void;
   draggingId?: string | null;
+  pointerDropPosition?: DropPosition | null;
 }
 
 function fmtDate(s: string | null) {
@@ -36,7 +38,7 @@ function fmtRange(start: string | null, end: string | null) {
 export function TaskRow({
   task, company, hasChildren = false, childrenCollapsed = false, attachmentCount = 0,
   onToggleChildren, onEdit, onCycleStatus,
-  onDragStartTask, onDragEndTask, onDropOnTask, draggingId,
+  onDragStartTask, onDragEndTask, onPointerDragStartTask, onDropOnTask, draggingId, pointerDropPosition,
 }: Props) {
   const { meta: statusMeta } = useStatusMeta();
   const sm = statusMeta[task.status] ?? { status: task.status, label: task.status, sort_order: 999, color: null, icon: null };
@@ -45,6 +47,7 @@ export function TaskRow({
   const [dropPos, setDropPos] = useState<DropPosition | null>(null);
   const isDraggingThis = draggingId === task.id;
   const dragActive = !!draggingId;
+  const effectiveDropPos = pointerDropPosition ?? dropPos;
 
   function computePos(e: React.DragEvent<HTMLDivElement>): DropPosition {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -59,6 +62,7 @@ export function TaskRow({
     <div
       className="relative"
       data-task-id={task.id}
+      data-task-row="true"
       onDragOver={(e) => {
         if (!onDropOnTask || !dragActive || isDraggingThis) return;
         e.preventDefault();
@@ -81,7 +85,9 @@ export function TaskRow({
     >
       {dropPos === 'before' && <div className="absolute left-0 right-0 -top-px h-0.5 bg-primary z-10 pointer-events-none" />}
       {dropPos === 'after' && <div className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary z-10 pointer-events-none" />}
-      <div className={`border-b bg-card ${dropPos === 'child' ? 'ring-2 ring-inset ring-primary/60' : ''}`}>
+      {effectiveDropPos === 'before' && <div className="absolute left-0 right-0 -top-px h-0.5 bg-primary z-10 pointer-events-none" />}
+      {effectiveDropPos === 'after' && <div className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary z-10 pointer-events-none" />}
+      <div className={`border-b bg-card ${effectiveDropPos === 'child' ? 'ring-2 ring-inset ring-primary/60' : ''}`}>
         <div className="relative">
           {accentColor && (
             <span
