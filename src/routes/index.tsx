@@ -279,19 +279,6 @@ function TasksPage() {
   }
 
 
-  function handleIndent(task: Task) {
-    const sameParent = tasks.filter((t) => t.parent_id === task.parent_id).sort((a, b) => a.sort_order - b.sort_order);
-    const idx = sameParent.findIndex((t) => t.id === task.id);
-    if (idx <= 0) { toast.info('Keine vorherige Schwester-Aufgabe zum Einrücken'); return; }
-    const newParent = sameParent[idx - 1];
-    applyUpdate(task.id, { parent_id: newParent.id, depth: newParent.depth + 1 }, `Eingerückt: „${task.title || 'Aufgabe'}"`);
-  }
-  function handleOutdent(task: Task) {
-    if (!task.parent_id) { toast.info('Schon auf oberster Ebene'); return; }
-    const parent = tasks.find((t) => t.id === task.parent_id);
-    if (!parent) return;
-    applyUpdate(task.id, { parent_id: parent.parent_id, depth: parent.depth }, `Ausgerückt: „${task.title || 'Aufgabe'}"`);
-  }
   function handleCreateAtEnd(title: string) {
     const maxOrder = tasks.reduce((m, t) => (t.parent_id === null ? Math.max(m, t.sort_order) : m), 0);
     createTask.mutate({ title, parent_id: null, depth: 0, sort_order: maxOrder + 1000 });
