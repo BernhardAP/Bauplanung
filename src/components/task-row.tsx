@@ -6,6 +6,8 @@ import type { Task, TaskStatus, Company } from '@/lib/types';
 import { STATUS_ORDER } from '@/lib/types';
 import { useStatusMeta } from '@/lib/use-status-meta';
 
+export type DropPosition = 'before' | 'after' | 'child';
+
 interface Props {
   task: Task;
   company: Company | null;
@@ -15,6 +17,10 @@ interface Props {
   onToggleChildren?: () => void;
   onEdit: () => void;
   onCycleStatus: () => void;
+  onDragStartTask?: (id: string) => void;
+  onDragEndTask?: () => void;
+  onDropOnTask?: (draggedId: string, targetId: string, position: DropPosition) => void;
+  draggingId?: string | null;
 }
 
 function fmtDate(s: string | null) {
@@ -30,15 +36,61 @@ function fmtRange(start: string | null, end: string | null) {
 export function TaskRow({
   task, company, hasChildren = false, childrenCollapsed = false, attachmentCount = 0,
   onToggleChildren, onEdit, onCycleStatus,
+  onDragStartTask, onDragEndTask, onDropOnTask, draggingId,
 }: Props) {
   const { meta: statusMeta } = useStatusMeta();
   const sm = statusMeta[task.status] ?? { status: task.status, label: task.status, sort_order: 999, color: null, icon: null };
   const dateText = fmtRange(task.start_date, task.end_date);
   const accentColor = company?.color ?? null;
+  const [dropPos, setDropPos] = useState<DropPosition | null>(null);
+  const isDraggingThis = draggingId === task.id;
+  const dragActive = !!draggingId;
+
+  function computePos(e: React.DragEvent<HTMLDivElement>): DropPosition {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const h = rect.height;
+    if (y < h * 0.28) return 'before';
+    if (y > h * 0.72) return 'after';
+    return 'child';
+  }
 
   return (
-    <div className="relative" data-task-id={task.id}>
-      <div className="border-b bg-card">
+    <div
+      className="relative"
+      data-task-id={task.id}
+      draggable={!!onDragStartTask}
+      onDragStart={(e) => {
+        if (!onDragStartTask) return;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', task.id);
+        onDragStartTask(task.id);
+      }}
+      onDragEnd={() => { setDropPos(null); onDragEndTask?.(); }}
+      onDragOver={(e) => {
+        if (!onDropOnTask || !dragActive || isDraggingThis) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const pos = computePos(e);
+        setDropPos((p) => (p === pos ? p : pos));
+      }}
+      onDragLeave={(e) => {
+        // only clear if leaving the row entirely
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropPos(null);
+      }}
+      onDrop={(e) => {
+        if (!onDropOnTask || isDraggingThis) return;
+        e.preventDefault();
+        const draggedId = e.dataTransfer.getData('text/plain');
+        const pos = dropPos ?? computePos(e);
+        setDropPos(null);
+        if (draggedId && draggedId !== task.id) onDropOnTask(draggedId, task.id, pos);
+      }}
+      style={{ opacity: isDraggingThis ? 0.4 : 1 }}
+    >
+      {dropPos === 'before' && <div className="absolute left-0 right-0 -top-px h-0.5 bg-primary z-10 pointer-events-none" />}
+      {dropPos === 'after' && <div className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary z-10 pointer-events-none" />}
+      <div className={`border-b bg-card ${dropPos === 'child' ? 'ring-2 ring-inset ring-primary/60' : ''}`}>
         <div className="relative">
           {accentColor && (
             <span
