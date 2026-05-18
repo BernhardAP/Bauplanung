@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCompanies, fetchTasks, flattenTree } from '@/lib/queries';
-import { TaskRow, nextStatus } from '@/components/task-row';
+import { TaskRow, nextStatus, type DropPosition } from '@/components/task-row';
 import { TaskDetailSheet } from '@/components/task-detail-sheet';
 import { CompanyBadge } from '@/components/company-badge';
 import { StatusIcon } from '@/lib/status-icon';
@@ -61,6 +61,13 @@ function TasksPage() {
   const [companyFilter, setCompanyFilter] = useState<Set<string>>(new Set());
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [rootDropHover, setRootDropHover] = useState(false);
+  const [pointerDrag, setPointerDrag] = useState<{
+    id: string;
+    pointerId: number;
+    dropTargetId: string | null;
+    dropPosition: DropPosition | null;
+    rootDrop: boolean;
+  } | null>(null);
 
   const ordered = useMemo(() => flattenTree(tasks), [tasks]);
   const companyById = useMemo(() => Object.fromEntries(companies.map((c) => [c.id, c])), [companies]);
