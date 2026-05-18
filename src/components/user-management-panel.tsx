@@ -92,9 +92,16 @@ Falls Du Fragen hast, melde Dich einfach bei mir.
 Viele Grüße
 Bernhard`;
             const mailto = `mailto:${encodeURIComponent(row.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            const last = (row as { last_sign_in_at?: string | null }).last_sign_in_at;
+            const lastLabel = last
+              ? `Letzter Login: ${new Date(last).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })}`
+              : 'Noch nie angemeldet';
             return (
               <li key={row.email} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-                <span className="truncate flex-1">{row.email}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="truncate">{row.email}</div>
+                  <div className="text-xs text-muted-foreground truncate">{lastLabel}</div>
+                </div>
                 {row.email !== ADMIN_EMAIL && (
                   <div className="flex items-center gap-1">
                     <Button

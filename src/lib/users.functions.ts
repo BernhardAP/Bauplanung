@@ -52,7 +52,27 @@ export const listAllowedEmails = createServerFn({ method: 'GET' })
       .select('email, created_at, invited_by')
       .order('created_at', { ascending: true });
     if (error) throw new Error(error.message);
-    return { emails: data ?? [] };
+
+    // Last sign-in per user via auth admin (paginated)
+    const lastSignInByEmail = new Map<string, string | null>();
+    let page = 1;
+    const perPage = 200;
+    for (;;) {
+      const { data: usersPage, error: usersErr } = await admin.auth.admin.listUsers({ page, perPage });
+      if (usersErr) throw new Error(usersErr.message);
+      for (const u of usersPage.users) {
+        if (u.email) lastSignInByEmail.set(u.email.toLowerCase(), u.last_sign_in_at ?? null);
+      }
+      if (usersPage.users.length < perPage) break;
+      page++;
+      if (page > 25) break;
+    }
+
+    const emails = (data ?? []).map((row) => ({
+      ...row,
+      last_sign_in_at: lastSignInByEmail.get(row.email.toLowerCase()) ?? null,
+    }));
+    return { emails };
   });
 
 export const removeAllowedEmail = createServerFn({ method: 'POST' })
