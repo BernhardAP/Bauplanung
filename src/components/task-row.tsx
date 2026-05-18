@@ -107,7 +107,7 @@ export function TaskRow({
               }}
               onDragEnd={() => { setDropPos(null); onDragEndTask?.(); }}
               onPointerDown={(e) => onPointerDragStartTask?.(task.id, e)}
-              className="shrink-0 text-muted-foreground/60 cursor-grab active:cursor-grabbing touch-none"
+              className="shrink-0 text-muted-foreground/60 cursor-grab active:cursor-grabbing touch-none select-none"
               aria-label="Ziehen"
               title="Ziehen zum Verschieben"
             >
@@ -158,7 +158,7 @@ export function TaskRow({
               }}
               onDragEnd={() => { setDropPos(null); onDragEndTask?.(); }}
               onPointerDown={(e) => onPointerDragStartTask?.(task.id, e)}
-              className="shrink-0 mt-1 text-muted-foreground/50 hover:text-muted-foreground cursor-grab active:cursor-grabbing"
+              className="shrink-0 mt-1 text-muted-foreground/50 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none select-none"
               title="Ziehen zum Verschieben"
               aria-label="Ziehen"
             >
