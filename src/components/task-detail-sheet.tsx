@@ -316,64 +316,11 @@ export function TaskDetailSheet({ task, open, onOpenChange, onAddSubtask }: Prop
           />
 
 
-          {(onIndent || onOutdent || onAddSubtask || onReparent) && task && (
-            <div className="space-y-2 border-t pt-3">
-              <div className="text-xs font-medium text-muted-foreground">Aktionen</div>
-              <div className="flex flex-wrap gap-2">
-                {onOutdent && (
-                  <Button type="button" variant="outline" size="sm" onClick={() => { onOutdent(task); onOpenChange(false); }}>
-                    <IndentDecrease className="h-4 w-4 mr-1" /> Ausrücken
-                  </Button>
-                )}
-                {onIndent && (
-                  <Button type="button" variant="outline" size="sm" onClick={() => { onIndent(task); onOpenChange(false); }}>
-                    <IndentIncrease className="h-4 w-4 mr-1" /> Einrücken
-                  </Button>
-                )}
-                {onAddSubtask && (
-                  <Button type="button" variant="outline" size="sm" onClick={() => { onAddSubtask(task); onOpenChange(false); }}>
-                    <Plus className="h-4 w-4 mr-1" /> Unteraufgabe
-                  </Button>
-                )}
-              </div>
-              {onReparent && (() => {
-                const forbidden = new Set<string>([task.id]);
-                const walk = (pid: string) => {
-                  for (const c of allTasks.filter((t) => t.parent_id === pid)) {
-                    forbidden.add(c.id);
-                    walk(c.id);
-                  }
-                };
-                walk(task.id);
-                const candidates = allTasks
-                  .filter((t) => !forbidden.has(t.id))
-                  .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-                const currentVal = task.parent_id ?? 'root';
-                return (
-                  <div>
-                    <Label className="text-xs flex items-center gap-1"><Move className="h-3 w-3" /> Verschieben unter</Label>
-                    <Select
-                      value={currentVal}
-                      onValueChange={(v) => {
-                        const newParentId = v === 'root' ? null : v;
-                        if (newParentId === (task.parent_id ?? null)) return;
-                        onReparent(task, newParentId);
-                        onOpenChange(false);
-                      }}
-                    >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="root">— oberste Ebene —</SelectItem>
-                        {candidates.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {'· '.repeat(t.depth)}{t.title || '(ohne Titel)'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                );
-              })()}
+          {onAddSubtask && task && (
+            <div className="border-t pt-3">
+              <Button type="button" variant="outline" size="sm" onClick={() => { onAddSubtask(task); onOpenChange(false); }}>
+                <Plus className="h-4 w-4 mr-1" /> Unteraufgabe
+              </Button>
             </div>
           )}
 
