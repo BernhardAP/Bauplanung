@@ -279,10 +279,6 @@ function TasksPage() {
   }
 
 
-  function handleCreateAtEnd(title: string) {
-    const maxOrder = tasks.reduce((m, t) => (t.parent_id === null ? Math.max(m, t.sort_order) : m), 0);
-    createTask.mutate({ title, parent_id: null, depth: 0, sort_order: maxOrder + 1000 });
-  }
   async function handleCreateAndEdit() {
     const maxOrder = tasks.reduce((m, t) => (t.parent_id === null ? Math.max(m, t.sort_order) : m), 0);
     const { data, error } = await supabase
