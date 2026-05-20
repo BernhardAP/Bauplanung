@@ -94,3 +94,54 @@ export const removeAllowedEmail = createServerFn({ method: 'POST' })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const setUserPassword = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      email: z.string().email().max(255),
+      password: z.string().min(8).max(128),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const callerEmail = String(context.claims.email ?? '').toLowerCase();
+    if (callerEmail !== ADMIN_EMAIL) {
+      throw new Error('Nicht berechtigt.');
+    }
+    const email = data.email.trim().toLowerCase();
+    const admin = getAdminClient();
+
+    // Find existing user by email (paginated)
+    let userId: string | null = null;
+    let page = 1;
+    const perPage = 200;
+    for (;;) {
+      const { data: usersPage, error: usersErr } = await admin.auth.admin.listUsers({ page, perPage });
+      if (usersErr) throw new Error(usersErr.message);
+      const found = usersPage.users.find((u) => u.email?.toLowerCase() === email);
+      if (found) { userId = found.id; break; }
+      if (usersPage.users.length < perPage) break;
+      page++;
+      if (page > 25) break;
+    }
+
+    if (userId) {
+      const { error } = await admin.auth.admin.updateUserById(userId, { password: data.password });
+      if (error) throw new Error(error.message);
+      return { ok: true, created: false };
+    }
+
+    // User existiert noch nicht: anlegen (Email muss auf Allowlist sein)
+    const { error: insErr } = await admin
+      .from('allowed_emails')
+      .upsert({ email, invited_by: callerEmail }, { onConflict: 'email' });
+    if (insErr) throw new Error(insErr.message);
+
+    const { error: createErr } = await admin.auth.admin.createUser({
+      email,
+      password: data.password,
+      email_confirm: true,
+    });
+    if (createErr) throw new Error(createErr.message);
+    return { ok: true, created: true };
+  });

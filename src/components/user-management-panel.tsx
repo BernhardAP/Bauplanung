@@ -4,18 +4,44 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Send, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { KeyRound, Loader2, Mail, Send, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { inviteUser, listAllowedEmails, removeAllowedEmail } from '@/lib/users.functions';
+import { inviteUser, listAllowedEmails, removeAllowedEmail, setUserPassword } from '@/lib/users.functions';
 import { ADMIN_EMAIL } from '@/lib/use-current-user';
 
 export function UserManagementPanel() {
   const invite = useServerFn(inviteUser);
   const list = useServerFn(listAllowedEmails);
   const remove = useServerFn(removeAllowedEmail);
+  const setPw = useServerFn(setUserPassword);
   const qc = useQueryClient();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
+  const [pwDialog, setPwDialog] = useState<{ email: string } | null>(null);
+  const [pw1, setPw1] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+
+  async function submitPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPwError(null);
+    if (pw1.length < 8) { setPwError('Mindestens 8 Zeichen.'); return; }
+    if (pw1 !== pw2) { setPwError('Passwörter stimmen nicht überein.'); return; }
+    if (!pwDialog) return;
+    setPwBusy(true);
+    try {
+      await setPw({ data: { email: pwDialog.email, password: pw1 } });
+      toast.success(`Passwort gesetzt für ${pwDialog.email}`);
+      setPwDialog(null);
+      setPw1(''); setPw2('');
+    } catch (err) {
+      setPwError((err as Error).message);
+    } finally {
+      setPwBusy(false);
+    }
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['allowed-emails'],
@@ -102,34 +128,76 @@ Bernhard`;
                   <div className="truncate">{row.email}</div>
                   <div className="text-xs text-muted-foreground truncate">{lastLabel}</div>
                 </div>
-                {row.email !== ADMIN_EMAIL && (
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      asChild
-                      aria-label="Einladungs-E-Mail im E-Mail-Programm öffnen"
-                      title="Einladungs-E-Mail im E-Mail-Programm öffnen"
-                    >
-                      <a href={mailto}>
-                        <Send className="h-4 w-4" />
-                      </a>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemove(row.email)}
-                      aria-label="Entfernen"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => { setPwDialog({ email: row.email }); setPw1(''); setPw2(''); setPwError(null); }}
+                    aria-label="Passwort setzen"
+                    title="Passwort setzen"
+                  >
+                    <KeyRound className="h-4 w-4" />
+                  </Button>
+                  {row.email !== ADMIN_EMAIL && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        asChild
+                        aria-label="Einladungs-E-Mail im E-Mail-Programm öffnen"
+                        title="Einladungs-E-Mail im E-Mail-Programm öffnen"
+                      >
+                        <a href={mailto}>
+                          <Send className="h-4 w-4" />
+                        </a>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemove(row.email)}
+                        aria-label="Entfernen"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </li>
             );
           })}
         </ul>
       </div>
+
+      <Dialog open={!!pwDialog} onOpenChange={(o) => { if (!o) { setPwDialog(null); setPwError(null); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Passwort setzen</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={submitPassword} className="space-y-3">
+            <div>
+              <Label className="text-xs">E-Mail</Label>
+              <Input value={pwDialog?.email ?? ''} readOnly disabled />
+            </div>
+            <div>
+              <Label htmlFor="set-pw1" className="text-xs">Neues Passwort</Label>
+              <Input id="set-pw1" type="text" autoComplete="off" minLength={8} required
+                value={pw1} onChange={(e) => setPw1(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="set-pw2" className="text-xs">Passwort bestätigen</Label>
+              <Input id="set-pw2" type="text" autoComplete="off" minLength={8} required
+                value={pw2} onChange={(e) => setPw2(e.target.value)} />
+            </div>
+            {pwError && <p className="text-xs text-destructive">{pwError}</p>}
+            <DialogFooter>
+              <Button type="submit" disabled={pwBusy} className="w-full">
+                {pwBusy && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                Speichern
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
