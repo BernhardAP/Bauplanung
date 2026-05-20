@@ -4,15 +4,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Send, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { KeyRound, Loader2, Mail, Send, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { inviteUser, listAllowedEmails, removeAllowedEmail } from '@/lib/users.functions';
+import { inviteUser, listAllowedEmails, removeAllowedEmail, setUserPassword } from '@/lib/users.functions';
 import { ADMIN_EMAIL } from '@/lib/use-current-user';
 
 export function UserManagementPanel() {
   const invite = useServerFn(inviteUser);
   const list = useServerFn(listAllowedEmails);
   const remove = useServerFn(removeAllowedEmail);
+  const setPw = useServerFn(setUserPassword);
   const qc = useQueryClient();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
