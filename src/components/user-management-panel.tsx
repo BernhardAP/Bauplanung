@@ -18,6 +18,30 @@ export function UserManagementPanel() {
   const qc = useQueryClient();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
+  const [pwDialog, setPwDialog] = useState<{ email: string } | null>(null);
+  const [pw1, setPw1] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+
+  async function submitPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPwError(null);
+    if (pw1.length < 8) { setPwError('Mindestens 8 Zeichen.'); return; }
+    if (pw1 !== pw2) { setPwError('Passwörter stimmen nicht überein.'); return; }
+    if (!pwDialog) return;
+    setPwBusy(true);
+    try {
+      await setPw({ data: { email: pwDialog.email, password: pw1 } });
+      toast.success(`Passwort gesetzt für ${pwDialog.email}`);
+      setPwDialog(null);
+      setPw1(''); setPw2('');
+    } catch (err) {
+      setPwError((err as Error).message);
+    } finally {
+      setPwBusy(false);
+    }
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['allowed-emails'],
