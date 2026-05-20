@@ -128,34 +128,76 @@ Bernhard`;
                   <div className="truncate">{row.email}</div>
                   <div className="text-xs text-muted-foreground truncate">{lastLabel}</div>
                 </div>
-                {row.email !== ADMIN_EMAIL && (
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      asChild
-                      aria-label="Einladungs-E-Mail im E-Mail-Programm öffnen"
-                      title="Einladungs-E-Mail im E-Mail-Programm öffnen"
-                    >
-                      <a href={mailto}>
-                        <Send className="h-4 w-4" />
-                      </a>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemove(row.email)}
-                      aria-label="Entfernen"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => { setPwDialog({ email: row.email }); setPw1(''); setPw2(''); setPwError(null); }}
+                    aria-label="Passwort setzen"
+                    title="Passwort setzen"
+                  >
+                    <KeyRound className="h-4 w-4" />
+                  </Button>
+                  {row.email !== ADMIN_EMAIL && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        asChild
+                        aria-label="Einladungs-E-Mail im E-Mail-Programm öffnen"
+                        title="Einladungs-E-Mail im E-Mail-Programm öffnen"
+                      >
+                        <a href={mailto}>
+                          <Send className="h-4 w-4" />
+                        </a>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemove(row.email)}
+                        aria-label="Entfernen"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </li>
             );
           })}
         </ul>
       </div>
+
+      <Dialog open={!!pwDialog} onOpenChange={(o) => { if (!o) { setPwDialog(null); setPwError(null); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Passwort setzen</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={submitPassword} className="space-y-3">
+            <div>
+              <Label className="text-xs">E-Mail</Label>
+              <Input value={pwDialog?.email ?? ''} readOnly disabled />
+            </div>
+            <div>
+              <Label htmlFor="set-pw1" className="text-xs">Neues Passwort</Label>
+              <Input id="set-pw1" type="text" autoComplete="off" minLength={8} required
+                value={pw1} onChange={(e) => setPw1(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="set-pw2" className="text-xs">Passwort bestätigen</Label>
+              <Input id="set-pw2" type="text" autoComplete="off" minLength={8} required
+                value={pw2} onChange={(e) => setPw2(e.target.value)} />
+            </div>
+            {pwError && <p className="text-xs text-destructive">{pwError}</p>}
+            <DialogFooter>
+              <Button type="submit" disabled={pwBusy} className="w-full">
+                {pwBusy && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                Speichern
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
