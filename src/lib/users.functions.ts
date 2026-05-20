@@ -126,7 +126,10 @@ export const setUserPassword = createServerFn({ method: 'POST' })
     }
 
     if (userId) {
-      const { error } = await admin.auth.admin.updateUserById(userId, { password: data.password });
+      const { error } = await admin.auth.admin.updateUserById(userId, {
+        password: data.password,
+        email_confirm: true,
+      });
       if (error) throw new Error(error.message);
       return { ok: true, created: false };
     }
