@@ -1,31 +1,38 @@
 ## Ziel
-Im Settings → Nutzer-Tab kannst Du für jede freigeschaltete E-Mail-Adresse direkt ein Passwort vergeben (statt nur Einladung per Mail). Funktioniert sowohl, wenn der User noch nie eingeloggt war, als auch bei bestehenden Konten (Passwort-Reset durch Admin).
+Alle Outlook-Abfragen sollen ausschließlich gegen den Mail-Ordner **`Privat/Haus-Leiwen`** laufen (Top-Level-Ordner `Privat` → Unterordner `Haus-Leiwen`), statt gegen `inbox`/`sentitems`.
 
 ## Änderungen
 
-### 1. `src/lib/users.functions.ts` — neue Server-Funktion `setUserPassword`
-- Eingabe: `{ email, password }` (Zod: Email gültig, Passwort 8–128 Zeichen)
-- Nur Admin (`bernhard.gruender@outlook.com`) darf aufrufen
-- Sucht User per `admin.auth.admin.listUsers` (paginiert wie in `listAllowedEmails`)
-- **Existiert User:** `admin.auth.admin.updateUserById(id, { password })`
-- **Existiert noch nicht:** Email in `allowed_emails` upserten, dann `admin.auth.admin.createUser({ email, password, email_confirm: true })` → User kann sich sofort einloggen
+### 1. `src/lib/outlook.functions.ts`
+- Neue Konstante:
+  ```ts
+  const OUTLOOK_FOLDER_PATH = ['Privat', 'Haus-Leiwen'];
+  ```
+- Neue Hilfsfunktion `resolveFolderId()`:
+  - Auflösung per Microsoft-Graph-Walk, da Graph keine Pfad-API für mailFolders kennt:
+    1. `GET /me/mailFolders?$filter=displayName eq 'Privat'&$select=id` → Root-Ordner-ID
+    2. `GET /me/mailFolders/{id}/childFolders?$filter=displayName eq 'Haus-Leiwen'&$select=id` → Ziel-ID
+  - Ergebnis im Modul-Scope cachen (einfache `let cachedFolderId`), da der Pfad statisch ist.
+  - Bei „nicht gefunden" klaren Fehler werfen (`Outlook-Ordner "Privat/Haus-Leiwen" nicht gefunden`).
+- `listOutlookMessages` umbauen:
+  - `folder`-Enum aus dem Input-Schema entfernen (nur noch optional `query`).
+  - Endpoint: `/me/mailFolders/{resolvedId}/messages?...` (statt `inbox`/`sentitems`).
+  - Rückgabe-Mapping: das `folder`-Feld in `OutlookMessage` auf festen Wert `'haus-leiwen'` setzen (Typ entsprechend erweitern) oder ganz aus dem Interface entfernen.
+- `saveOutlookEmailToOnedrive` bleibt funktional unverändert (greift per `messageId` zu) — aber zur Sicherheit kein Refactor nötig.
 
-### 2. `src/components/user-management-panel.tsx` — neuer Dialog „Passwort setzen"
-- Pro Listenzeile ein zusätzliches Icon (z. B. `KeyRound`) neben Mail-/Trash-Buttons
-- Klick öffnet kleinen Dialog mit:
-  - E-Mail (readonly)
-  - Neues Passwort (min. 8 Zeichen)
-  - Passwort bestätigen
-  - Speichern-Button
-- Bei Erfolg: Toast „Passwort gesetzt für …"
-- Auch für die Admin-Adresse selbst nutzbar (kein Filter)
+### 2. Aufrufseite (`src/components/outlook-picker.tsx`)
+- Sent/Inbox-Tabs / Folder-Toggle entfernen, falls vorhanden.
+- Aufruf von `listOutlookMessages` ohne `folder`-Parameter.
+- UI-Label anpassen (z. B. „Posteingang Haus-Leiwen").
 
-## Technische Details
-- Wiederverwendung des bestehenden `getAdminClient()` mit Service-Role-Key — bleibt server-only
-- Keine Schema-Änderung, keine RLS-Änderung nötig
-- Keine Mail wird versendet (bewusst, da Du Passwörter persönlich übergibst)
+### 3. Keine DB-/Auth-Änderungen
+Reine Code-Beschränkung. Token hätte weiterhin technisch Zugriff aufs ganze Postfach — das ist Selbstdisziplin im Code, keine harte Token-Einschränkung (siehe vorherige Diskussion).
 
-## Was sich für Dich ändert
-Statt „Einladen → User vergibt sein Passwort beim ersten Login" kannst Du nun:
-1. Adresse einladen (wie bisher) **oder**
-2. Direkt ein Passwort setzen und dem Nutzer Zugangsdaten mitteilen — er ist sofort eingeloggt-fähig.
+## Hinweise / Caveats
+- Sollte der Ordner umbenannt/verschoben werden, schlägt jede Abfrage mit klarer Fehlermeldung fehl — Pfad dann im Code anpassen.
+- `displayName`-Filter ist case-sensitive in Graph; exakte Schreibweise `Privat` und `Haus-Leiwen` (mit Bindestrich) wird verwendet.
+- Cache lebt pro Worker-Instanz; bei Folder-Rename greift erst ein Re-Deploy.
+
+## Out of Scope
+- Shared Mailbox, ApplicationAccessPolicy, eigene Entra-App-Registration.
+- Änderungen am OneDrive-Korrespondenz-Pfad (bleibt `Privat/Haus/Leiwen/Korrespondenz`).

@@ -19,7 +19,6 @@ export function OutlookPicker({ open, onOpenChange, onSaved }: Props) {
   const save = useServerFn(saveOutlookEmailToOnedrive);
   const [q, setQ] = useState('');
   const [debounced, setDebounced] = useState('');
-  const [folder, setFolder] = useState<'inbox' | 'sentitems'>('inbox');
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(q), 300);
@@ -27,12 +26,12 @@ export function OutlookPicker({ open, onOpenChange, onSaved }: Props) {
   }, [q]);
 
   useEffect(() => {
-    if (!open) { setQ(''); setDebounced(''); setFolder('inbox'); }
+    if (!open) { setQ(''); setDebounced(''); }
   }, [open]);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['outlook', folder, debounced],
-    queryFn: () => list({ data: { query: debounced || undefined, folder } }),
+    queryKey: ['outlook', debounced],
+    queryFn: () => list({ data: { query: debounced || undefined } }),
     enabled: open,
     staleTime: 30_000,
   });
@@ -56,10 +55,8 @@ export function OutlookPicker({ open, onOpenChange, onSaved }: Props) {
         <DialogHeader>
           <DialogTitle>E-Mail aus Outlook anhängen</DialogTitle>
         </DialogHeader>
-        <div className="flex gap-1 mb-1">
-          <Button size="sm" variant={folder === 'inbox' ? 'default' : 'ghost'} onClick={() => setFolder('inbox')}>Posteingang</Button>
-          <Button size="sm" variant={folder === 'sentitems' ? 'default' : 'ghost'} onClick={() => setFolder('sentitems')}>Gesendet</Button>
-        </div>
+        <div className="text-xs text-muted-foreground mb-1">Ordner: Privat / Haus-Leiwen</div>
+
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input

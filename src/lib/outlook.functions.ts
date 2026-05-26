@@ -7,6 +7,8 @@ const ONEDRIVE_GW = 'https://connector-gateway.lovable.dev/microsoft_onedrive';
 const KORRESPONDENZ_PATH = 'Privat/Haus/Leiwen/Korrespondenz';
 const KORR_BASE = `/me/drive/root:/${KORRESPONDENZ_PATH.split('/').map(encodeURIComponent).join('/')}`;
 
+const OUTLOOK_FOLDER_PATH = ['Privat', 'Haus-Leiwen'] as const;
+
 export interface OutlookMessage {
   id: string;
   subject: string;
@@ -14,8 +16,8 @@ export interface OutlookMessage {
   fromAddress: string | null;
   receivedAt: string | null;
   preview: string | null;
-  folder: 'inbox' | 'sentitems';
 }
+
 
 function getKeys() {
   const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
@@ -68,7 +70,7 @@ interface GraphMsg {
   bodyPreview?: string;
 }
 
-function mapMsg(it: GraphMsg, folder: 'inbox' | 'sentitems'): OutlookMessage {
+function mapMsg(it: GraphMsg): OutlookMessage {
   const ea = it.from?.emailAddress;
   return {
     id: it.id,
@@ -77,29 +79,53 @@ function mapMsg(it: GraphMsg, folder: 'inbox' | 'sentitems'): OutlookMessage {
     fromAddress: ea?.address ?? null,
     receivedAt: it.receivedDateTime ?? null,
     preview: it.bodyPreview ?? null,
-    folder,
   };
 }
 
 const select = '$select=id,subject,from,receivedDateTime,bodyPreview';
 
+let cachedFolderId: string | null = null;
+
+async function resolveFolderId(): Promise<string> {
+  if (cachedFolderId) return cachedFolderId;
+  let parentId: string | null = null;
+  for (let i = 0; i < OUTLOOK_FOLDER_PATH.length; i++) {
+    const name = OUTLOOK_FOLDER_PATH[i];
+    const base = parentId
+      ? `/me/mailFolders/${parentId}/childFolders`
+      : `/me/mailFolders`;
+    // Use $filter on displayName. Escape single quotes per OData.
+    const filter = `displayName eq '${name.replace(/'/g, "''")}'`;
+    const res = await outlookFetch(`${base}?$select=id&$filter=${encodeURIComponent(filter)}&$top=1`);
+    const json = await res.json();
+    const id = json?.value?.[0]?.id;
+    if (!id) {
+      throw new Error(`Outlook-Ordner "${OUTLOOK_FOLDER_PATH.slice(0, i + 1).join('/')}" nicht gefunden`);
+    }
+    parentId = id;
+  }
+  cachedFolderId = parentId!;
+  return cachedFolderId;
+}
+
 export const listOutlookMessages = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) =>
     z.object({
       query: z.string().max(200).optional(),
-      folder: z.enum(['inbox', 'sentitems']).default('inbox'),
     }).parse(input ?? {}),
   )
   .handler(async ({ data }) => {
     const q = data.query?.trim();
+    const folderId = await resolveFolderId();
     const params = q
       ? `?${select}&$top=50&$search="${encodeURIComponent(q)}"`
       : `?${select}&$top=50&$orderby=receivedDateTime desc`;
-    const res = await outlookFetch(`/me/mailFolders/${data.folder}/messages${params}`);
+    const res = await outlookFetch(`/me/mailFolders/${folderId}/messages${params}`);
     const json = await res.json();
-    const items: OutlookMessage[] = (json.value ?? []).map((m: GraphMsg) => mapMsg(m, data.folder));
+    const items: OutlookMessage[] = (json.value ?? []).map((m: GraphMsg) => mapMsg(m));
     return { items };
   });
+
 
 function safeFilename(s: string) {
   return s.replace(/[\\/:*?"<>|\r\n\t]+/g, '_').replace(/\s+/g, ' ').trim().slice(0, 120) || 'email';
