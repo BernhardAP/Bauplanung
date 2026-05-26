@@ -1,31 +1,51 @@
-## Ziel
-Im Settings → Nutzer-Tab kannst Du für jede freigeschaltete E-Mail-Adresse direkt ein Passwort vergeben (statt nur Einladung per Mail). Funktioniert sowohl, wenn der User noch nie eingeloggt war, als auch bei bestehenden Konten (Passwort-Reset durch Admin).
+## Ausgangslage
 
-## Änderungen
+- Das Lovable-Projekt-Repo ist **leer** (nur `.gitignore`). Deshalb startet kein Dev-Server und du siehst den 412-Fehler.
+- Dein eigentlicher Code liegt in einem **separaten Repo** `BernhardAP/Bauplanung` (vermutlich privat), das nicht mit Lovable verbunden ist.
+- Lovable unterstützt **keinen direkten Import** bestehender GitHub-Repos. Die GitHub-Integration erstellt nur ein neues Repo und synchronisiert ab dann bidirektional – sie zieht keinen Code aus einem fremden Repo.
 
-### 1. `src/lib/users.functions.ts` — neue Server-Funktion `setUserPassword`
-- Eingabe: `{ email, password }` (Zod: Email gültig, Passwort 8–128 Zeichen)
-- Nur Admin (`bernhard.gruender@outlook.com`) darf aufrufen
-- Sucht User per `admin.auth.admin.listUsers` (paginiert wie in `listAllowedEmails`)
-- **Existiert User:** `admin.auth.admin.updateUserById(id, { password })`
-- **Existiert noch nicht:** Email in `allowed_emails` upserten, dann `admin.auth.admin.createUser({ email, password, email_confirm: true })` → User kann sich sofort einloggen
+## Lösungsweg (empfohlen)
 
-### 2. `src/components/user-management-panel.tsx` — neuer Dialog „Passwort setzen"
-- Pro Listenzeile ein zusätzliches Icon (z. B. `KeyRound`) neben Mail-/Trash-Buttons
-- Klick öffnet kleinen Dialog mit:
-  - E-Mail (readonly)
-  - Neues Passwort (min. 8 Zeichen)
-  - Passwort bestätigen
-  - Speichern-Button
-- Bei Erfolg: Toast „Passwort gesetzt für …"
-- Auch für die Admin-Adresse selbst nutzbar (kein Filter)
+Wir übertragen den Code aus `Bauplanung` in das von Lovable verbundene Repo. Du machst die Git-Schritte lokal, ich kümmere mich danach um Anpassungen, damit das Projekt in Lovable sauber läuft.
 
-## Technische Details
-- Wiederverwendung des bestehenden `getAdminClient()` mit Service-Role-Key — bleibt server-only
-- Keine Schema-Änderung, keine RLS-Änderung nötig
-- Keine Mail wird versendet (bewusst, da Du Passwörter persönlich übergibst)
+### Schritt 1 – Welches Repo hat Lovable angelegt?
+Im Lovable-Editor unten links: **+ Menü → GitHub** zeigt den verbundenen Repo-Namen (z. B. `BernhardAP/<lovable-repo>`). Diesen Namen brauchst du gleich.
 
-## Was sich für Dich ändert
-Statt „Einladen → User vergibt sein Passwort beim ersten Login" kannst Du nun:
-1. Adresse einladen (wie bisher) **oder**
-2. Direkt ein Passwort setzen und dem Nutzer Zugangsdaten mitteilen — er ist sofort eingeloggt-fähig.
+### Schritt 2 – Code lokal ins Lovable-Repo kopieren
+Auf deinem Rechner:
+
+```bash
+# 1. Lovable-Repo klonen
+git clone https://github.com/BernhardAP/<lovable-repo>.git
+cd <lovable-repo>
+
+# 2. Inhalt von Bauplanung dazu kopieren (ohne dessen .git Ordner!)
+#    Windows PowerShell-Beispiel:
+#    Copy-Item -Path C:\Pfad\zu\Bauplanung\* -Destination . -Recurse -Exclude .git
+
+# 3. Commit + Push
+git add .
+git commit -m "Initial import from Bauplanung"
+git push origin main
+```
+
+Sobald der Push durch ist, synchronisiert Lovable die Dateien automatisch ins Projekt.
+
+### Schritt 3 – Lovable-Kompatibilität prüfen (ich übernehme)
+Sobald der Code da ist, prüfe ich:
+
+- ob das Projekt überhaupt zum Lovable-Stack passt (Lovable nutzt **TanStack Start + Vite + React + Tailwind**). Wenn `Bauplanung` z. B. ein Next.js-, Vue-, Angular- oder reines Backend-Projekt ist, läuft es hier **nicht** und müsste portiert werden.
+- ob `lovable.toml`, `package.json` und die Dev-Command-Konfiguration vorhanden/korrekt sind.
+- ob die Ordnerstruktur (`src/routes/`, `src/styles.css`, `__root.tsx`) zur TanStack-Start-Konvention passt.
+
+Danach gebe ich dir Bescheid, was angepasst werden muss, damit der Preview wieder lädt.
+
+## Alternativen
+
+- **Repo öffentlich machen**: Wenn du `BernhardAP/Bauplanung` öffentlich stellst, kann ich vorab reinschauen und dir sagen, ob ein Übertrag sinnvoll ist oder ob ein Neuaufbau in Lovable schneller wäre.
+- **Neu aufbauen**: Falls `Bauplanung` nur ein Anfang war, kann ich eine frische Bauplanungs-App direkt in Lovable bauen (Projekte, Gewerke, Termine, Aufgaben – je nach Wunsch).
+
+## Was ich brauche, um weiterzumachen
+
+1. Stack-Info: Welches Framework verwendet `Bauplanung`? (React/Vite, Next.js, etwas anderes?)
+2. Entweder den Push gemäß Schritt 2 ausführen **oder** das Repo kurz öffentlich machen, damit ich reinschauen kann.
