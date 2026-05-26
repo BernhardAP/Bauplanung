@@ -160,11 +160,22 @@ export const saveOutlookEmailToOnedrive = createServerFn({ method: 'POST' })
     z.object({ messageId: z.string().min(1), subject: z.string().optional() }).parse(input),
   )
   .handler(async ({ data }) => {
+    // 0) Validate: message must be in the allowed folder
+    const allowedFolderId = await resolveFolderId();
+    const metaRes = await outlookFetch(
+      `/me/messages/${encodeURIComponent(data.messageId)}?$select=parentFolderId`,
+    );
+    const meta = (await metaRes.json()) as { parentFolderId?: string };
+    if (meta.parentFolderId !== allowedFolderId) {
+      throw new Error('E-Mail liegt nicht im erlaubten Ordner (Privat/Haus-Leiwen)');
+    }
+
     // 1) Hole MIME
     const mimeRes = await outlookFetch(`/me/messages/${encodeURIComponent(data.messageId)}/$value`, {
       headers: { Accept: 'message/rfc822' },
     });
     const mime = await mimeRes.arrayBuffer();
+
 
     // 2) Stelle sicher, dass Korrespondenz-Ordner existiert
     await ensureKorrespondenzFolder();
