@@ -7,6 +7,8 @@ const ONEDRIVE_GW = 'https://connector-gateway.lovable.dev/microsoft_onedrive';
 const KORRESPONDENZ_PATH = 'Privat/Haus/Leiwen/Korrespondenz';
 const KORR_BASE = `/me/drive/root:/${KORRESPONDENZ_PATH.split('/').map(encodeURIComponent).join('/')}`;
 
+const OUTLOOK_FOLDER_PATH = ['Privat', 'Haus-Leiwen'] as const;
+
 export interface OutlookMessage {
   id: string;
   subject: string;
@@ -14,8 +16,8 @@ export interface OutlookMessage {
   fromAddress: string | null;
   receivedAt: string | null;
   preview: string | null;
-  folder: 'inbox' | 'sentitems';
 }
+
 
 function getKeys() {
   const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
