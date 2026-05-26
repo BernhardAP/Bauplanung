@@ -1,51 +1,35 @@
 ## Ausgangslage
 
-- Das Lovable-Projekt-Repo ist **leer** (nur `.gitignore`). Deshalb startet kein Dev-Server und du siehst den 412-Fehler.
-- Dein eigentlicher Code liegt in einem **separaten Repo** `BernhardAP/Bauplanung` (vermutlich privat), das nicht mit Lovable verbunden ist.
-- Lovable unterstützt **keinen direkten Import** bestehender GitHub-Repos. Die GitHub-Integration erstellt nur ein neues Repo und synchronisiert ab dann bidirektional – sie zieht keinen Code aus einem fremden Repo.
+- `BernhardAP/Bauplanung` ist öffentlich und enthält ein vollständiges Projekt mit **demselben Stack**, den Lovable hier verwendet: TanStack Start, Vite 7, React 19, Tailwind v4, Supabase, shadcn/ui.
+- Dieses Lovable-Projekt ist leer (nur `.gitignore`), darum lädt der Preview nicht.
+- Weil die Stacks identisch sind, kann ich den Code **direkt aus dem öffentlichen Repo in dieses Projekt übernehmen** — kein lokaler Git-Workaround nötig.
 
-## Lösungsweg (empfohlen)
+## Plan
 
-Wir übertragen den Code aus `Bauplanung` in das von Lovable verbundene Repo. Du machst die Git-Schritte lokal, ich kümmere mich danach um Anpassungen, damit das Projekt in Lovable sauber läuft.
+### 1. Code übertragen
+Ich lade alle Dateien aus `BernhardAP/Bauplanung@main` per GitHub API und schreibe sie 1:1 in dieses Lovable-Projekt. Übertragen werden u. a.:
 
-### Schritt 1 – Welches Repo hat Lovable angelegt?
-Im Lovable-Editor unten links: **+ Menü → GitHub** zeigt den verbundenen Repo-Namen (z. B. `BernhardAP/<lovable-repo>`). Diesen Namen brauchst du gleich.
+- Konfiguration: `package.json`, `bun.lock`, `vite.config.ts`, `tsconfig.json`, `components.json`, `eslint.config.js`, `bunfig.toml`, `.prettierrc/.prettierignore`
+- App-Code: alles unter `src/` (Routes, Components, UI, Hooks, lib, Supabase-Integration, `router.tsx`, `server.ts`, `start.ts`, `styles.css`)
+- `supabase/` Ordner (Migrationen, falls vorhanden)
+- **NICHT** übertragen: `.env` (enthält geheime Keys — Lovable Cloud setzt die selbst), `.git`, `node_modules`
 
-### Schritt 2 – Code lokal ins Lovable-Repo kopieren
-Auf deinem Rechner:
+### 2. Dependencies installieren
+`bun install`, damit der Dev-Server starten kann.
 
-```bash
-# 1. Lovable-Repo klonen
-git clone https://github.com/BernhardAP/<lovable-repo>.git
-cd <lovable-repo>
+### 3. Lovable Cloud prüfen
+Das Projekt nutzt Supabase. Ich prüfe, ob Lovable Cloud aktiviert werden muss und ob die DB-Migrationen aus `supabase/migrations/` hier neu ausgeführt werden müssen, damit Tabellen/RLS existieren.
 
-# 2. Inhalt von Bauplanung dazu kopieren (ohne dessen .git Ordner!)
-#    Windows PowerShell-Beispiel:
-#    Copy-Item -Path C:\Pfad\zu\Bauplanung\* -Destination . -Recurse -Exclude .git
+### 4. Preview verifizieren
+Dev-Server-Logs checken, ggf. kleine Anpassungen (z. B. fehlende Env-Vars, Lovable-spezifische Vite-Plugins).
 
-# 3. Commit + Push
-git add .
-git commit -m "Initial import from Bauplanung"
-git push origin main
-```
+## Was du danach noch tun musst
 
-Sobald der Push durch ist, synchronisiert Lovable die Dateien automatisch ins Projekt.
+- **Supabase-Daten**: Falls dein altes Projekt echte Daten enthielt, müssen die separat exportiert (CSV) und hier importiert werden.
+- **Secrets**: Wenn `.env` API-Keys für OneDrive/Outlook o. ä. enthielt, sage mir welche — ich richte sie als Lovable-Secrets ein.
+- **Repo wieder privat**: Sobald der Transfer durch ist, kannst du `Bauplanung` wieder privat schalten.
 
-### Schritt 3 – Lovable-Kompatibilität prüfen (ich übernehme)
-Sobald der Code da ist, prüfe ich:
+## Offene Fragen
 
-- ob das Projekt überhaupt zum Lovable-Stack passt (Lovable nutzt **TanStack Start + Vite + React + Tailwind**). Wenn `Bauplanung` z. B. ein Next.js-, Vue-, Angular- oder reines Backend-Projekt ist, läuft es hier **nicht** und müsste portiert werden.
-- ob `lovable.toml`, `package.json` und die Dev-Command-Konfiguration vorhanden/korrekt sind.
-- ob die Ordnerstruktur (`src/routes/`, `src/styles.css`, `__root.tsx`) zur TanStack-Start-Konvention passt.
-
-Danach gebe ich dir Bescheid, was angepasst werden muss, damit der Preview wieder lädt.
-
-## Alternativen
-
-- **Repo öffentlich machen**: Wenn du `BernhardAP/Bauplanung` öffentlich stellst, kann ich vorab reinschauen und dir sagen, ob ein Übertrag sinnvoll ist oder ob ein Neuaufbau in Lovable schneller wäre.
-- **Neu aufbauen**: Falls `Bauplanung` nur ein Anfang war, kann ich eine frische Bauplanungs-App direkt in Lovable bauen (Projekte, Gewerke, Termine, Aufgaben – je nach Wunsch).
-
-## Was ich brauche, um weiterzumachen
-
-1. Stack-Info: Welches Framework verwendet `Bauplanung`? (React/Vite, Next.js, etwas anderes?)
-2. Entweder den Push gemäß Schritt 2 ausführen **oder** das Repo kurz öffentlich machen, damit ich reinschauen kann.
+1. Soll ich Lovable Cloud (Supabase) für dieses Projekt **automatisch aktivieren** und die Migrationen ausführen? (Empfohlen — sonst läuft die App ohne DB ins Leere.)
+2. Gab es im alten Supabase **produktive Daten**, die du behalten willst, oder können wir mit leerer DB starten?
