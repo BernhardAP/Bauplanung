@@ -75,15 +75,39 @@ export const searchOnedrive = createServerFn({ method: 'POST' })
     return { items };
   });
 
+const SCOPE_PATH_PREFIX = `/drive/root:/${SCOPE_FOLDER}`;
+
+function isInScope(parentPath: string | undefined, name: string | undefined): boolean {
+  if (!parentPath) return false;
+  // parentPath sieht aus wie "/drive/root:/Privat/Haus/Leiwen" oder "/drive/root:/Privat/Haus/Leiwen/Unterordner"
+  if (parentPath === SCOPE_PATH_PREFIX) return true;
+  if (parentPath.startsWith(`${SCOPE_PATH_PREFIX}/`)) return true;
+  // Sonderfall: Item IST der Scope-Ordner selbst -> parent ist "/drive/root:/Privat/Haus" mit name "Leiwen"
+  if (parentPath === '/drive/root:/Privat/Haus' && name === 'Leiwen') return true;
+  return false;
+}
+
 export const browseOnedrive = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) =>
-    z.object({ folderId: z.string().optional() }).parse(input ?? {}),
+    z.object({ folderId: z.string().max(200).optional() }).parse(input ?? {}),
   )
   .handler(async ({ data }) => {
-    const path = data.folderId
-      ? `/me/drive/items/${encodeURIComponent(data.folderId)}/children?${select}&$top=100&$orderby=name`
-      : `${SCOPE_BASE}:/children?${select}&$top=100&$orderby=name`;
-    const json = await gatewayFetch(path);
+    if (data.folderId) {
+      // Vor dem Listen: Item holen und Scope prüfen
+      const item: GraphItem = await gatewayFetch(
+        `/me/drive/items/${encodeURIComponent(data.folderId)}?${select}`,
+      );
+      if (!isInScope(item.parentReference?.path, item.name)) {
+        throw new Error('Zugriff außerhalb von Privat/Haus/Leiwen nicht erlaubt');
+      }
+      const json = await gatewayFetch(
+        `/me/drive/items/${encodeURIComponent(data.folderId)}/children?${select}&$top=100&$orderby=name`,
+      );
+      const items: OneDriveItem[] = (json.value ?? []).map(mapItem);
+      return { items };
+    }
+    const json = await gatewayFetch(`${SCOPE_BASE}:/children?${select}&$top=100&$orderby=name`);
     const items: OneDriveItem[] = (json.value ?? []).map(mapItem);
     return { items };
   });
+
