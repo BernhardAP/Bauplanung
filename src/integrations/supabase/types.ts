@@ -14,7 +14,200 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      allowed_emails: {
+        Row: {
+          created_at: string
+          email: string
+          invited_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          invited_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          invited_by?: string | null
+        }
+        Relationships: []
+      }
+      attachments: {
+        Row: {
+          created_at: string
+          filename: string
+          id: string
+          kind: Database["public"]["Enums"]["attachment_kind"]
+          mime_type: string | null
+          storage_path: string | null
+          task_id: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          filename: string
+          id?: string
+          kind?: Database["public"]["Enums"]["attachment_kind"]
+          mime_type?: string | null
+          storage_path?: string | null
+          task_id: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          filename?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["attachment_kind"]
+          mime_type?: string | null
+          storage_path?: string | null
+          task_id?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          adresse: string | null
+          color: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_default_cc: boolean
+          kontaktperson: string | null
+          kuerzel: string
+          name: string
+          notes: string | null
+          telefon: string | null
+          web: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          color?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_default_cc?: boolean
+          kontaktperson?: string | null
+          kuerzel: string
+          name: string
+          notes?: string | null
+          telefon?: string | null
+          web?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          color?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_default_cc?: boolean
+          kontaktperson?: string | null
+          kuerzel?: string
+          name?: string
+          notes?: string | null
+          telefon?: string | null
+          web?: string | null
+        }
+        Relationships: []
+      }
+      status_settings: {
+        Row: {
+          color: string | null
+          icon: string | null
+          label: string
+          sort_order: number
+          status: string
+        }
+        Insert: {
+          color?: string | null
+          icon?: string | null
+          label: string
+          sort_order?: number
+          status: string
+        }
+        Update: {
+          color?: string | null
+          icon?: string | null
+          label?: string
+          sort_order?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          depth: number
+          end_date: string | null
+          final_price: number | null
+          id: string
+          notes: string | null
+          offered_price: number | null
+          parent_id: string | null
+          planned_cost: number | null
+          sort_order: number
+          start_date: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          depth?: number
+          end_date?: string | null
+          final_price?: number | null
+          id?: string
+          notes?: string | null
+          offered_price?: number | null
+          parent_id?: string | null
+          planned_cost?: number | null
+          sort_order?: number
+          start_date?: string | null
+          status?: string
+          title?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          depth?: number
+          end_date?: string | null
+          final_price?: number | null
+          id?: string
+          notes?: string | null
+          offered_price?: number | null
+          parent_id?: string | null
+          planned_cost?: number | null
+          sort_order?: number
+          start_date?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +216,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      attachment_kind: "document" | "email" | "link"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +343,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      attachment_kind: ["document", "email", "link"],
+    },
   },
 } as const
