@@ -1,35 +1,31 @@
-## Ausgangslage
+## Ziel
+Im Settings → Nutzer-Tab kannst Du für jede freigeschaltete E-Mail-Adresse direkt ein Passwort vergeben (statt nur Einladung per Mail). Funktioniert sowohl, wenn der User noch nie eingeloggt war, als auch bei bestehenden Konten (Passwort-Reset durch Admin).
 
-- `BernhardAP/Bauplanung` ist öffentlich und enthält ein vollständiges Projekt mit **demselben Stack**, den Lovable hier verwendet: TanStack Start, Vite 7, React 19, Tailwind v4, Supabase, shadcn/ui.
-- Dieses Lovable-Projekt ist leer (nur `.gitignore`), darum lädt der Preview nicht.
-- Weil die Stacks identisch sind, kann ich den Code **direkt aus dem öffentlichen Repo in dieses Projekt übernehmen** — kein lokaler Git-Workaround nötig.
+## Änderungen
 
-## Plan
+### 1. `src/lib/users.functions.ts` — neue Server-Funktion `setUserPassword`
+- Eingabe: `{ email, password }` (Zod: Email gültig, Passwort 8–128 Zeichen)
+- Nur Admin (`bernhard.gruender@outlook.com`) darf aufrufen
+- Sucht User per `admin.auth.admin.listUsers` (paginiert wie in `listAllowedEmails`)
+- **Existiert User:** `admin.auth.admin.updateUserById(id, { password })`
+- **Existiert noch nicht:** Email in `allowed_emails` upserten, dann `admin.auth.admin.createUser({ email, password, email_confirm: true })` → User kann sich sofort einloggen
 
-### 1. Code übertragen
-Ich lade alle Dateien aus `BernhardAP/Bauplanung@main` per GitHub API und schreibe sie 1:1 in dieses Lovable-Projekt. Übertragen werden u. a.:
+### 2. `src/components/user-management-panel.tsx` — neuer Dialog „Passwort setzen"
+- Pro Listenzeile ein zusätzliches Icon (z. B. `KeyRound`) neben Mail-/Trash-Buttons
+- Klick öffnet kleinen Dialog mit:
+  - E-Mail (readonly)
+  - Neues Passwort (min. 8 Zeichen)
+  - Passwort bestätigen
+  - Speichern-Button
+- Bei Erfolg: Toast „Passwort gesetzt für …"
+- Auch für die Admin-Adresse selbst nutzbar (kein Filter)
 
-- Konfiguration: `package.json`, `bun.lock`, `vite.config.ts`, `tsconfig.json`, `components.json`, `eslint.config.js`, `bunfig.toml`, `.prettierrc/.prettierignore`
-- App-Code: alles unter `src/` (Routes, Components, UI, Hooks, lib, Supabase-Integration, `router.tsx`, `server.ts`, `start.ts`, `styles.css`)
-- `supabase/` Ordner (Migrationen, falls vorhanden)
-- **NICHT** übertragen: `.env` (enthält geheime Keys — Lovable Cloud setzt die selbst), `.git`, `node_modules`
+## Technische Details
+- Wiederverwendung des bestehenden `getAdminClient()` mit Service-Role-Key — bleibt server-only
+- Keine Schema-Änderung, keine RLS-Änderung nötig
+- Keine Mail wird versendet (bewusst, da Du Passwörter persönlich übergibst)
 
-### 2. Dependencies installieren
-`bun install`, damit der Dev-Server starten kann.
-
-### 3. Lovable Cloud prüfen
-Das Projekt nutzt Supabase. Ich prüfe, ob Lovable Cloud aktiviert werden muss und ob die DB-Migrationen aus `supabase/migrations/` hier neu ausgeführt werden müssen, damit Tabellen/RLS existieren.
-
-### 4. Preview verifizieren
-Dev-Server-Logs checken, ggf. kleine Anpassungen (z. B. fehlende Env-Vars, Lovable-spezifische Vite-Plugins).
-
-## Was du danach noch tun musst
-
-- **Supabase-Daten**: Falls dein altes Projekt echte Daten enthielt, müssen die separat exportiert (CSV) und hier importiert werden.
-- **Secrets**: Wenn `.env` API-Keys für OneDrive/Outlook o. ä. enthielt, sage mir welche — ich richte sie als Lovable-Secrets ein.
-- **Repo wieder privat**: Sobald der Transfer durch ist, kannst du `Bauplanung` wieder privat schalten.
-
-## Offene Fragen
-
-1. Soll ich Lovable Cloud (Supabase) für dieses Projekt **automatisch aktivieren** und die Migrationen ausführen? (Empfohlen — sonst läuft die App ohne DB ins Leere.)
-2. Gab es im alten Supabase **produktive Daten**, die du behalten willst, oder können wir mit leerer DB starten?
+## Was sich für Dich ändert
+Statt „Einladen → User vergibt sein Passwort beim ersten Login" kannst Du nun:
+1. Adresse einladen (wie bisher) **oder**
+2. Direkt ein Passwort setzen und dem Nutzer Zugangsdaten mitteilen — er ist sofort eingeloggt-fähig.
