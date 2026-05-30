@@ -109,7 +109,7 @@ ich lade Dich zur gemeinsamen Bauplanung Leiwen ein. Über die App können wir A
 
 So kommst Du rein:
 1. Öffne die App unter folgendem Link:
-https://idea-nest-mate.lovable.app
+https://bp-leiwen.lovable.app
 2. Melde Dich mit dieser E-Mail-Adresse an: ${row.email}
 3. Beim ersten Login vergibst Du Dein eigenes Passwort.
 
