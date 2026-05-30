@@ -109,10 +109,12 @@ function TasksPage() {
         return false;
       return true;
     };
-    // Hide descendants of any collapsed parent (only when no filter is active,
-    // so search/filters always show all matches regardless of collapse state).
+    // Hide descendants of any collapsed parent. Bypass only during an active
+    // text search so users can find matches inside collapsed branches; status
+    // and company filters keep collapse working.
+    const searchActive = q.length > 0;
     const hideByCollapse = (t: Task): boolean => {
-      if (filterActive) return false;
+      if (searchActive) return false;
       let p = t.parent_id;
       while (p) {
         if (collapsedParents.has(p)) return true;
@@ -122,7 +124,7 @@ function TasksPage() {
       return false;
     };
     return ordered.filter((t) => matchesFilters(t) && !hideByCollapse(t));
-  }, [ordered, tasks, search, statusFilter, companyFilter, collapsedParents, filterActive]);
+  }, [ordered, tasks, search, statusFilter, companyFilter, collapsedParents]);
 
   const editTask = ordered.find((t) => t.id === editTaskId) ?? null;
 
